@@ -20,7 +20,7 @@
 # For an actual Arduino, this would be "standard" or "leonardo", or "mega".
 # For Phys605 we use a bare chip, for which we made a custom pinout: atmega328p
 # The atmega168, atmega168p, atmega328, atmega328p all have the same layout.
-BOARD_TYPE=atmega328p
+BOARD_TYPE=atmega328
 
 # The type of the chip as the avr-gcc compiler expects it.
 # You can find the types of chips supported with "avr-gcc -dumpspecs | grep mmcu="
@@ -29,7 +29,7 @@ BOARD_TYPE=atmega328p
 # For Phys605, this will be the atmega328p
 #
 # Other Examples: atmega168p  atmega328p  atmega168, atmega168p
-MCU=atmega168
+MCU=atmega328p
 
 # Frequency of CPU.
 # This depends on how you wired up your circuit.
