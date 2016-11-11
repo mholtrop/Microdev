@@ -4,6 +4,12 @@
 *.o
 *.obj
 
+# Ignore the dependency directories.
+depdir
+
+# Copied include files
+AVR/include/*.h
+
 # Precompiled Headers
 *.gch
 *.pch
@@ -24,6 +30,7 @@
 *.lib
 
 # Executables
+*.hex
 *.exe
 *.out
 *.app
