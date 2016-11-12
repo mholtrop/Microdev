@@ -41,8 +41,8 @@ MCU=atmega328p
 #
 # Without a crystal, this is 1 MHz standard (1000000), or 8 MHz (8000000) with a fuse setting.
 # With a crystal, it is probably either 16 MHz or 20 MHz.
-#F_CPU=16000000
-F_CPU=20000000
+F_CPU=16000000
+#F_CPU=20000000
 #F_CPU=1000000
 #F_CPU=8000000
 #
