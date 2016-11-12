@@ -29,7 +29,8 @@ AVR/include/*.h
 *.a
 *.lib
 
-# Executables
+# Executables and AVR files
+*.out.map
 *.hex
 *.exe
 *.out
