@@ -11,4 +11,5 @@ test
 #
 # This changes too much. 
 #
-Makefile_spec.mk
+Makefile_specs.mk
+#
