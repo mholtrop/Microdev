@@ -8,6 +8,7 @@
 #ifndef LEDBALL_H_
 #define LEDBALL_H_
 
+#define HardwareSerial_h
 #include <Adafruit_Neopixel.h>
 
 // Configuration of the LED Ball.
@@ -52,6 +53,19 @@ public:
     uint16_t i=getIndex(x,y);
     setPixelColor(i,r,g,b);
   }
+  
+  void copy_to_store(){
+    memcpy(pixels_st,pixels,MAX_Z*3);
+  }
+  
+  void copy_from_store(){
+    memcpy(pixels,pixels_st,MAX_Z*3);
+  }
+  
+public:
+  
+  uint8_t pixels_st[MAX_Z*3];
+  
   
 };
 
