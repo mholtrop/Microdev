@@ -38,6 +38,7 @@ int main(void){
 
   Serial.begin(115200);
   Serial.print("\n\rHello. This is the LED BBB in NeoPixel test mode. V0.1 \n\r");
+    Serial.print("\n\rThis is also a decent bit of code to quickly test an AVR \n\r");
   pinMode(L_PIN1, OUTPUT);  // This sets the output pin to OUTPUT. It also makes sure the arduinolib is loaded properly.
 
   strip1->begin();
