@@ -10,6 +10,6 @@ CXXSRC= Firmata.cpp utility/BLEStream.cpp utility/EthernetClientStream.cpp utili
 SRC=
 HEADERS= Firmata.h Boards.h
 
-LIB=../libarduinoutils.a
+LIB=../libarduinoutil.a
 
 include ../Maketemplate
