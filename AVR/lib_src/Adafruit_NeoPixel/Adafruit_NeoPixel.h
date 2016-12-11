@@ -149,7 +149,7 @@ class Adafruit_NeoPixel {
   inline bool
     canShow(void) { return (micros() - endTime) >= 50L; }
 
- private:
+// private:
 
   boolean
 #ifdef NEO_KHZ400  // If 400 KHz NeoPixel support enabled...
