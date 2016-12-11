@@ -1,0 +1,14 @@
+#
+# Do not track for now.
+#
+LCD_example
+LEDBall_park
+PlantWateringSystem
+Sensirion
+Tiny
+build
+test
+#
+# This changes too much. 
+#
+Makefile_spec.mk
