@@ -10,13 +10,15 @@
 #include <avr/io.h>
 #include "Arduino.h"
 #include "HardwareSerial.h"
+#include "Sensirion.h"
 
 int
 main (void) {
 
-  sei();  // Enable interrupts:  __asm__ __volatile__ ("sei" ::: "memory");
+  init(); // The Arduino init() function is needed for timer and delay(ms) to function properly.
+
   Serial.begin(115200);
-  Serial.print("Hello this is the atmega168 starting up. V-0.0.2\n");
+  Serial.print("Hello this is the atmega168 starting up. V-0.0.2\n\r");
 
   // Set interrupts enabled.
   DDRB = 0x02;                   // Scope to PB1
@@ -25,6 +27,9 @@ main (void) {
   PORTD = 0x80; // ON
 
   Serial.print("Loop top..\n");
+
+  Sensirion TempSense(16,15);
+
   int loopcount=0;
   while (1) {
       if( (loopcount++)%100 == 0){
