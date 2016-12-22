@@ -71,7 +71,7 @@ int main(void) {
       
       unsigned long start_time = micros();                             // Take the time, and send it.  This will block until complete
       if (!radio.write( &start_time, sizeof(unsigned long) )){
-        Serial.println(F("failed"));
+        Serial.println(F("Failed send!"));
       }
       
       radio.startListening();                                    // Now, continue listening
@@ -103,8 +103,8 @@ int main(void) {
         Serial.println(F(" microseconds"));
       }
       
-      // Try again 1s later
-      delay(1000);
+      // Try again 3s later
+      delay(3000);
     }
     
     
