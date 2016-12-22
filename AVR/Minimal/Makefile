@@ -29,7 +29,10 @@ PROGNAME=Minimal
 
 SOURCES=main.cpp
 
-
+#
+# Set a simpler LIB, only arduino
+#
+LIBS = -L${AVR_HOME}/lib/$(SYSTEM_TYPE)  -larduino  
 #
 # Include all the common rules for AVR.
 #

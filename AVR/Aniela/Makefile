@@ -25,5 +25,9 @@ PROGNAME=Aniela
 # Use .cc, .cpp or .C suffix for C++ files, use .S 
 # (NOT .s !!!) for assembly source code files.
 SOURCES=main.cpp
+#
+# Absolute minimal library, this saves almost 3k in space.
+#
+LIBS := -lc
 
 include ../Makefile_common.mk

@@ -28,8 +28,6 @@ main (void) {
 
   Serial.print("Loop top..\n");
 
-  Sensirion TempSense(16,15);
-
   int loopcount=0;
   while (1) {
       if( (loopcount++)%100 == 0){

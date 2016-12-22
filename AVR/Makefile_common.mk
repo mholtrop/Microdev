@@ -23,8 +23,19 @@ DEPDIR = depdir
 INC= -I${AVR_HOME}/include -I${AVR_HOME}/include/variants/$(BOARD_TYPE) $(EXTRA_INCLUDES)
 
 # libraries to link in (e.g. -lmylib)
-LIBS= -Wl,-u,vfprintf -lprintf_flt -L${AVR_HOME}/lib/$(SYSTEM_TYPE) -larduinoutil -larduino  $(EXTRA_LIBS) -lm -lc
-#LIBS= -Wl,-u,vfprintf -lprintf_flt -lm -lc 
+#
+# Fairly comprehensive LIBS definition.
+#
+ifndef LIBS
+#$(warning LIBS was not set)
+LIBS = -Wl,-u,vfprintf -lprintf_flt -L${AVR_HOME}/lib/$(SYSTEM_TYPE) -larduinoutil -larduino  $(EXTRA_LIBS) -lm -lc
+endif
+
+# In you Makefile you cal set alternates:
+# Simple Arduino:
+#LIBS= -L${AVR_HOME}/lib/$(SYSTEM_TYPE)  -larduino  
+# No Ardiono and no output at all, saves about 3k to 4k in space.
+#LIBS= -lc
 
 ##### ADDED Flags ####
 
