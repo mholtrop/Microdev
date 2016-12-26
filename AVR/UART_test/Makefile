@@ -27,7 +27,8 @@ PROGNAME=UART_Test
 # Use .c              suffix for C   files.
 # Use .S  (NOT .s !!!) for assembly source code files.
 
-SOURCES= main.cpp uart.cpp
+SOURCES= main.cpp
+# uart.cpp is included?
 
 #
 # Set a simpler LIB - NON Ardiuno
@@ -38,7 +39,7 @@ SOURCES= main.cpp uart.cpp
 # -Wl,-u,vfscanf -lscanf_min        # Minimalist scanf version
 # -Wl,-u,vfscanf -lscanf_flt        # Floating point scanf version
 
-LIBS =  -Wl,-u,vfprintf -lprintf_min -lc
+LIBS =  -lc
 #
 # Include all the common rules for AVR.
 #

@@ -123,6 +123,7 @@ int uart_putchar(char c, FILE *stream) {
   return 1;
 }
 
+#if UART_USE_BUFFERS == 1
 int uart_putchar_buffered(char c, FILE *stream){
   // Just put stuff in the circular buffer.
   // If it is full, well, too bad, overwrite and get garbage out :-)
@@ -171,32 +172,38 @@ int uart_putchar_buffered(char c, FILE *stream){
   return 1;
 }
 
+#endif // UART_USE_BUFFERS
+  
 int uart_getchar(FILE *stream) {
-// This is a blocking version. It will sit and wair until the UART has
+// This is a blocking version. It will sit and wait until the UART has
 // a character for us.
-    loop_until_bit_is_set(UCSR0A, RXC0);
-    return UDR0;
+  loop_until_bit_is_set(UCSR0A, RXC0);
+  char c= UDR0;
+#if UART_ECHO == 1
+   loop_until_bit_is_set(UCSR0A, UDRE0);
+  UDR0 = c; // Echo it back out right away.
+#endif
+  if( c == 13 /* ^m */ || c == '\r') c='\n'; // End of line
+  return c;
 }
 
+#if UART_USE_BUFFERS == 1
 int uart_getchar_buffered(FILE *stream) {
 // This is the non blocking version. It looks for data from the rx buffer.
-// if the rx buffer is empty, return 0
-//  __tx_uart_buf_index_t next_buffer_loc = (__rx_uart_buf_tail + 1) % RX_UART_BUF_SIZE;
+// if the rx buffer is empty, unset __rx_uart_receive_complete and return '\n'
+// Note: We return '\n' and not 0 because fgets expects an \n at the end of the line.
+//
   if(__rx_uart_buf_tail != __rx_uart_buf_head){ // We did not yet catch up with the head.
     char c=__rx_uart_buf[ __rx_uart_buf_tail ];
     __rx_uart_buf_tail = (__rx_uart_buf_tail + 1) % RX_UART_BUF_SIZE; //next_buffer_loc;
     return c;
   }else{ // We caught up with the tail. The buffer is empty, so be ready for next receive.
     __rx_uart_receive_complete=false;
-    return 0;
+    return '\n'; // Terminate the string.
   }
   return -1;
 }
-
-bool uart_receive_complete(void){
-  return (__rx_uart_receive_complete);
-}
-
+  
 /////////////////////////////////////////////////
 // INTERRUPT ROUTINES                         ///
 /////////////////////////////////////////////////
@@ -235,4 +242,14 @@ ISR(USART_RX_vect){
     __rx_uart_receive_complete=true; // Pretend you got a return, so process the buffer.
   }
 }
+  
+bool uart_receive_complete(void){
+    return (__rx_uart_receive_complete);
+  }
+
+#else
+bool uart_receive_complete(void){
+    return(true);
+  }
+#endif // UART_USE_BUFFERS
 

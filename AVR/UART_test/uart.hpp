@@ -7,7 +7,8 @@
  * I made not effort to make this general, since it is an easy switch to another uart if you wish.
  * 
  * Some control of the code is done with #define statements in this header to keep the code small. It
- * uses less than 3k, quite a bit less than Arduino HardwareSerial, though that code has different functionality.
+ * uses less than 1.5k, quite a bit less than Arduino HardwareSerial, though that code has different functionality.
+ * To be fair, if you add in the printf functionality, code size goes to ~ 3k.
  *
  * For really small code, turn off the buffering with the UART_USE_BUFFERS flag, but loose the buffers and 
  * interrupt routines
@@ -17,6 +18,8 @@
  *
  * Author: Maurik Holtrop
  * Date:   2016-12-26
+ *
+ * Yes, this code is 'pedagogically' commented. Deal with it.
 **/
 #ifndef __UART_CPP__
 #define __UART_CPP__
@@ -51,7 +54,7 @@
 #endif
 
 #ifndef UART_USE_BUFFERS
-#define UART_USE_BUFFERS  1          // Set to 1 if you want buffered code; 0 no buffers, so this all gets smaller.
+#define UART_USE_BUFFERS  1         // Set to 1 if you want buffered code; 0 no buffers, so this all gets smaller.
 #endif
 
 #if UART_USE_BUFFERS == 1
