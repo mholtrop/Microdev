@@ -27,8 +27,7 @@ PROGNAME=UART_Test
 # Use .c              suffix for C   files.
 # Use .S  (NOT .s !!!) for assembly source code files.
 
-SOURCES= main.cpp
-# uart.cpp is included?
+SOURCES= main.cpp uart.cpp my_fputs.cpp
 
 #
 # Set a simpler LIB - NON Ardiuno

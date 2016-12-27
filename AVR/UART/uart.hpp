@@ -21,26 +21,27 @@
  *
  * Yes, this code is 'pedagogically' commented. Deal with it.
 **/
+
 #ifndef __UART_CPP__
 #define __UART_CPP__
 
 #include <stdio.h>
 
 #ifndef F_CPU
-#define F_CPU 16000000UL   // For the BAUD calculation, we need accurate F_CPU. Define with -DF_CPU=16000000 on compiler command line.
+#error This code will not work without properly defining F_CPU
+#endif
+
+#ifndef BAUD
+#error This code will not work properly without defining BAUD
 #endif
 
 //
 // Define varipus behaviors of the UART code.
 //
 
-#ifndef BAUD
-#define BAUD 115200UL   // Default BAUD rate.
-#define BAUD_TOL 4      // Up the tolerance from 2 to avoid warning from utils/setbaud.h
-#endif
-
 #ifndef UART_ALLOW_BAUD
 #define UART_ALLOW_BAUD 1          // Set to 0 fixes BAUD rate and saves space (320 bytes)
+#define BAUD_TOL 2                 // Otherwise set in util/setbaud.h
 #endif
 
 #ifndef UART_ECHO
@@ -54,7 +55,7 @@
 #endif
 
 #ifndef UART_USE_BUFFERS
-#define UART_USE_BUFFERS  1         // Set to 1 if you want buffered code; 0 no buffers, so this all gets smaller.
+#define UART_USE_BUFFERS  0         // Set to 1 if you want buffered code; 0 no buffers, so this all gets smaller.
 #endif
 
 #if UART_USE_BUFFERS == 1
@@ -67,7 +68,6 @@
 #ifndef RX_UART_BUF_SIZE
 #define RX_UART_BUF_SIZE 64
 #endif
-
 
 #if (TX_UART_BUF_SIZE>256)
 typedef uint16_t __tx_uart_buf_index_t;
@@ -88,11 +88,21 @@ extern __tx_uart_buf_index_t __tx_uart_buf_tail;
 extern __tx_uart_buf_index_t __rx_uart_buf_head;
 extern __tx_uart_buf_index_t __rx_uart_buf_tail;
 
+inline bool uart_receive_complete(void){
+  return (__rx_uart_receive_complete);
+}
+
+#else
+
+inline bool uart_receive_complete(void){
+  return(true);
+}
+
 #endif  // UART_USE_BUFFERS
 ///
 
 void uart_tx_buffer_flush();       //! Flush the buffers. This is a blocking operation for transmit.
-void uart_init(unsigned char mode=0,uint32_t baud=115200UL); //! Initialize the UART code.
+void uart_init(unsigned char mode=0,uint32_t baud=BAUD); //! Initialize the UART code.
 bool uart_receive_complete(void);  //! Return the receive complete flag. Indicates a return (RET) or newline '\n' on the RX.
 
 int  uart_putchar_buffered(char c, FILE *stream); //! Internal routine, buffered put.

@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <stdio.h>
-#include <util/delay.h>
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -21,10 +20,10 @@ __tx_uart_buf_index_t __tx_uart_buf_tail;
 __tx_uart_buf_index_t __rx_uart_buf_head;
 __tx_uart_buf_index_t __rx_uart_buf_tail;
 
+bool __rx_uart_receive_complete;
 #endif
 
 // Global flag, telling any code that a complete string was received.
-bool __rx_uart_receive_complete;
 
 #if UART_ALLOW_BAUD == 1
 void uart_init(unsigned char mode,uint32_t baud){
@@ -93,8 +92,6 @@ void uart_init(unsigned char mode, uint32_t /* baud is discarded */) {
 #else
   __uart_io.put = uart_putchar;
   __uart_io.get = uart_getchar;
-  __rx_uart_receive_complete=true;  // Not buffering, so always complete.
-  
 #endif
 
   __uart_io.flags=  _FDEV_SETUP_RW;
@@ -120,7 +117,7 @@ int uart_putchar(char c, FILE *stream) {
   // and then output the character. This means it is synchronous.
   loop_until_bit_is_set(UCSR0A, UDRE0);
   UDR0 = c;
-  return 1;
+  return 0;
 }
 
 #if UART_USE_BUFFERS == 1
@@ -135,7 +132,7 @@ int uart_putchar_buffered(char c, FILE *stream){
     // UDRE0  = USART Data Register Empty.
     UDR0 = c;            // Send the char out right away.
     UCSR0A|=  _BV(TXC0); // Clear the transmit complete bit.
-    return 1;            // Yup, it was send out.
+    return 0;            // Yup, it was send out. 0 = no error in fwrite.
   }
 
   // Here we check if adding this char will cause a buffer full.
@@ -159,7 +156,7 @@ int uart_putchar_buffered(char c, FILE *stream){
       __tx_uart_buf[TX_UART_BUF_SIZE-1] = '@';
     }
     // HEAD is NOT increased (then buffer would look empty! So return.
-    return 1;
+    return 0;
 #endif
   }
 
@@ -169,7 +166,7 @@ int uart_putchar_buffered(char c, FILE *stream){
   
   UCSR0B |= _BV(UDRIE0); // Set USART Data Register Empty Interrupt Enable,
                          // so when the current transmit is complete, the interupt will send this one.
-  return 1;
+  return 0;
 }
 
 #endif // UART_USE_BUFFERS
@@ -199,7 +196,7 @@ int uart_getchar_buffered(FILE *stream) {
     return c;
   }else{ // We caught up with the tail. The buffer is empty, so be ready for next receive.
     __rx_uart_receive_complete=false;
-    return '\n'; // Terminate the string.
+    return '\0'; // Terminate the string.
   }
   return -1;
 }
@@ -220,12 +217,11 @@ ISR(USART_UDRE_vect){
 }
 
 ISR(USART_RX_vect){
-  PORTC = PORTC ^ _BV(0);
   // Receive something interrupt. The UART has an input ready for us.
   char c = UDR0; // Read it right away.
   __rx_uart_buf_index_t rx_i = (__rx_uart_buf_head + 1) % RX_UART_BUF_SIZE;
   if(rx_i != __rx_uart_buf_tail){                     // Buffer still has space.
-    if( c == '\n' || c == 13 /* ^m */ || c == '\r'){  // End of line
+    if( c == 13 /* ^m */ || c == '\n' || c == '\r'){  // End of line
       __rx_uart_receive_complete=true; // Tell the code that we have something complete.
       __rx_uart_buf[__rx_uart_buf_head] = 0; // Terminate string with 0, eat the c.
     }else{
@@ -243,13 +239,5 @@ ISR(USART_RX_vect){
   }
 }
   
-bool uart_receive_complete(void){
-    return (__rx_uart_receive_complete);
-  }
-
-#else
-bool uart_receive_complete(void){
-    return(true);
-  }
 #endif // UART_USE_BUFFERS
 
