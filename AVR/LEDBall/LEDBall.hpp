@@ -8,14 +8,17 @@
 #ifndef LEDBALL_H_
 #define LEDBALL_H_
 
-#define HardwareSerial_h
-#include <Adafruit_Neopixel.h>
+//#define HardwareSerial_h
+#include "Adafruit_NeoPixel.h"
 
 // Configuration of the LED Ball.
-#define MAX_X  8
+#define MAX_X  1
 #define MAX_Y 32
 #define MAX_Z (MAX_X*MAX_Y)  // ODD strings are X/2 smaller!
 #define STANDARD
+
+
+#define EXTRA_STORE
 
 // For the NEO_RGB pixels, the only kind I have, the value of NEO_RGN+NEO_KHZ800 = 6
 // The offsets are then:
@@ -25,14 +28,14 @@
 // So packing is in b,g,r order for each 24bit rgb pixel.
 // Instead of using offsets, we could use:
 // color = ( b << 16 | g << 8 | r )
-// This is different from the Adafruit_NeoPixel::Color(r,g,b) which packs (r<<16 | g<<8 | b)
+// This is different from the My_NeoPixel::Color(r,g,b) which packs (r<<16 | g<<8 | b)
 // and is thus a bit idiotic.
 // I don't know what is faster.
-class LEDBall : Adafruit_NeoPixel {
+class LEDBall : public Adafruit_NeoPixel {
 
 public:
 	LEDBall(void);
-  LEDBall(uint16_t n,uint8_t p=6,neoPixelType t=NEO_RGB + NEO_KHZ800);
+  LEDBall(uint8_t p=4,volatile uint8_t *pt=&PORTD,neoPixelType t=NEO_RGB + NEO_KHZ800);
   ~LEDBall();
 
   uint16_t getIndex(uint8_t x, uint8_t y){  // Compute the pixel index from the x,y location.
@@ -46,26 +49,34 @@ public:
 #endif
   };
   
-  void setBaseColor(uint8_t r,uint8_t g,uint8_t b);
-  void deltaBaseColor(int16_t r,int16_t g,int16_t b); // Change all pixels by r,g,b in color space.
-  void deltaPixelColor(uint16_t i,int16_t r,int16_t g,int16_t b); // Change all pixels by r,g,b in color space.
-  void setPixelColorXY(int x,int y,uint8_t r,uint8_t g,uint8_t b){
+  void setBaseColor(uint8_t r,uint8_t g,uint8_t b,uint8_t *pix=NULL);
+  void deltaBaseColor(int16_t r,int16_t g,int16_t b,uint8_t *pix=NULL); // Change all pixels by r,g,b in color space.
+  void deltaPixelColor(uint16_t i,int16_t r,int16_t g,int16_t b,uint8_t *pix=NULL); // Change all pixels by r,g,b in color space.
+  void setPixelColorXY(int x,int y,uint8_t r,uint8_t g,uint8_t b,uint8_t *pix=NULL){
     uint16_t i=getIndex(x,y);
-    setPixelColor(i,r,g,b);
+    if(pix == NULL || pix == pixels){
+      setPixelColor(i,r,g,b);
+    }else{
+      
+    }
   }
   
+#ifdef EXTRA_STORE
+  void alloc_store(void);
   void copy_to_store(){
-    memcpy(pixels_st,pixels,MAX_Z*3);
+    if(pixels_st) memcpy(pixels_st,pixels,MAX_Z*3);
   }
   
   void copy_from_store(){
-    memcpy(pixels,pixels_st,MAX_Z*3);
+    if(pixels_st)memcpy(pixels,pixels_st,MAX_Z*3);
   }
+  
+  void swap_store();
   
 public:
   
-  uint8_t pixels_st[MAX_Z*3];
-  
+  uint8_t *pixels_st;
+#endif
   
 };
 

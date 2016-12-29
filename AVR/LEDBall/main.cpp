@@ -10,55 +10,93 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
-#include "MySerial.hpp"          // This must go before Arduino.h, otherwise it will include the HardwareSerial.h
-#define HardwareSerial_h
-#include "Arduino.h"
-#include "Adafruit_NeoPixel.h"
+#include "uart.hpp"        // This must go before Arduino.h, otherwise it will include the HardwareSerial.h
+#define HardwareSerial_h   // Don't led Arduino grab the serial.
 #include "LEDBall.hpp"
 
-#define L_PIN1 6
-#define N_PIN1 256
+#define L_PIN1  4
+#define L_PORT1 PORTD      // Output is on PD4, pin 6
 
-MySerial Serial(&UBRR0H, &UBRR0L, &UCSR0A, &UCSR0B, &UCSR0C, &UDR0);    // To be able to hook the functions into these vectors, and to be able to put "print" anywhere in the code, this must be global.
-
-ISR(USART_RX_vect){
-  Serial._rx_complete_irq();
+void timer1_init(void){
+  // Setup timer1 to keep track of microseconds.
+  TCCR1A = 0; // Normal operation (no compare, no PWM)
+  TCCR1B = (_BV(CS11)) ; // clk_io/8 - system clock = 16 MHz, so 2 MHz clock.
+  TCCR1C = 0; // Normal
+  TCNT1 = 0;  // Start the timer at zero.
 }
-
-ISR(USART_UDRE_vect){
-  Serial._tx_udr_empty_irq();
-}
-
-//extern "C" void __vector_18 (void) __attribute__ ((signal,used, externally_visible)) ; void __vector_18 (void){
-//  Serial._rx_complete_irq();
-//}
-//
-//extern "C" void USART_UDRE_vect (void) __attribute__ ((signal,used, externally_visible)) ; void USART_UDRE_vect (void){
-//  Serial._tx_udr_empty_irq();
-//}
-
 
 int main(void) {
+  unsigned long start,stop;
 
-  init();               // SETUP THE ARDUINO environment.
+  uart_init(0x0,BAUD);
+  timer1_init();
   
-  Serial.begin(115200);
-  Serial.print("\n\rHello. This is LEDBall Code V0.2.\n\r");
-  Serial.flush();
-  Serial.print("\n\rI kind of really hope the serial stuff works.\n\r");
+  printf("\n\rHello. This is LEDBall Code V0.3.1\r\n");
+  flush();
+  DDRD |= _BV(4) | _BV(3);  // Pin 6 of the chip is on port PD4
+  PORTD = 0;
+  PORTD |= _BV(3);
+  start = TCNT1;
+  printf("Starting with micros = %ld\r\n",start);
+//  Serial.println(start);
   
-  pinMode(L_PIN1, OUTPUT);  // This sets the output pin to OUTPUT. It also makes sure the arduinolib is loaded properly.
+  PORTD &= ~_BV(3);
+  LEDBall leds(L_PIN1, &L_PORT1, NEO_GRB + NEO_KHZ800);
+
+  start = TCNT1;
+  printf("Now we have micros   = %ld\r\n",start);
+
+  printf("Red...\r\n");
+  flush();
+  start = TCNT1;
+  leds.setBaseColor(255,0,0,leds.pixels);
+  stop  = TCNT1;
+//
+  printf("1: %ld us\r\n",(stop - start)/2);
+  flush();
+
+  TCNT1 = 0;
+  start = TCNT1;
+  leds.show();
+  stop  = TCNT1;
+  printf("2: %ld us \r\n",(stop-start)/2);
+
+  leds.setBaseColor(0,0,0,leds.pixels);
+  _delay_ms(500);
+  leds.show();
+  printf("off\r\n");
   
-  LEDBall leds;
+////  _delay_ms(1000);
+////  Serial.println("All Green...");
+////  leds.setBaseColor(0,255,0);
+////  leds.show();
+////  _delay_ms(500);
+////  leds.setBaseColor(0,0,0);
+////  leds.show();
+////  _delay_ms(1000);
+////  Serial.println("All Blue...");
+////  leds.setBaseColor(0,0,255);
+////  leds.show();
+////  _delay_ms(500);
+////  leds.setBaseColor(0,0,0);
+////  leds.show();
+////  _delay_ms(1000);
+////  Serial.println("All White...");
+////  leds.setBaseColor(255,255,255);
+////  leds.show();
+////  _delay_ms(500);
+////  leds.setBaseColor(0,0,0);
+////  leds.show();
+////  Serial.println("Off, ready for input.");
   
   while (1) {
-    leds.copy_to_store();
-    leds.copy_from_store();
-    if (Serial.available()) {
-      int s_in = Serial.read();
-      Serial.print(s_in);
-    }
+//    leds.copy_to_store();
+//    leds.copy_from_store();
+//    if (Serial.available()) {
+//      char s_in = Serial.read();
+//     Serial.print(s_in);
+//    }
 	}
-  
-	return 0; // never reached
+
+  return 0; // never reached
 }

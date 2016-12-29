@@ -24,7 +24,10 @@ PROGNAME=LEDBall
 # (list all files to compile, e.g. 'a.c b.cpp as.S'):
 # Use .cc, .cpp or .C suffix for C++ files, use .S 
 # (NOT .s !!!) for assembly source code files.
-SOURCES=main.cpp LEDBall.cpp MySerial.cpp
+SOURCES=main.cpp uart.cpp Adafruit_NeoPixel.cpp LEDBall.cpp
+
+# Simplify the libraries. No Arduino stuff. Minimal printf
+LIBS = -Wl,-u,vfprintf -lprintf_min -lc
 
 
 include ../Makefile_common.mk

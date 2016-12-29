@@ -102,6 +102,9 @@ inline bool uart_receive_complete(void){
 ///
 
 void uart_tx_buffer_flush();       //! Flush the buffers. This is a blocking operation for transmit.
+#ifndef flush
+#define flush uart_tx_buffer_flush
+#endif
 void uart_init(unsigned char mode=0,uint32_t baud=BAUD); //! Initialize the UART code.
 bool uart_receive_complete(void);  //! Return the receive complete flag. Indicates a return (RET) or newline '\n' on the RX.
 
