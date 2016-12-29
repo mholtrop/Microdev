@@ -61,7 +61,7 @@ int main(void) {
 // Note: printf works as expected, BUT note that it takes a bunch more code space!
 //      printf("You wrote: l=%d\r\n [%s] \r\n",stdin->len,strr );
       fwrite("You wrote: [",1,12,stdout);
-      fwrite(strr,strlen(strr),stdout);
+      fwrite(strr,1,strlen(strr),stdout);
       fwrite("]\r\n",1,3,stdout);
     }
   }

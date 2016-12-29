@@ -81,7 +81,7 @@ typedef uint16_t __rx_uart_buf_index_t;
 typedef uint8_t __rx_uart_buf_index_t;
 #endif
 
-extern bool __rx_uart_receive_complete;
+extern volatile bool __rx_uart_receive_complete;
 ///
 extern __tx_uart_buf_index_t __tx_uart_buf_head;
 extern __tx_uart_buf_index_t __tx_uart_buf_tail;
