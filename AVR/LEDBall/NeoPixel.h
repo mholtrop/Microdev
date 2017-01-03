@@ -17,14 +17,14 @@
   --------------------------------------------------------------------*/
 /*--------------------------------------------------------------------
  This Library was quite seriously hacked from the original by Maurik Holtrop
- Reason: Get rid of all the Arduino overhead.
+ Reason: Get rid of all the Arduino overhead, make it smaller, 16 MHz AVR only.
  Though I think the Arduino is absolutely a fantastic product, I am using the
  bare chip and need more direct use of the chip, without the Arduino libraries 
  interfering.
  */
 
-#ifndef ADAFRUIT_NEOPIXEL_H
-#define ADAFRUIT_NEOPIXEL_H
+#ifndef NEOPIXEL_H
+#define NEOPIXEL_H
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -34,7 +34,7 @@
 
 // The order of primary colors in the NeoPixel data stream can vary
 // among device types, manufacturers and even different revisions of
-// the same item.  The third parameter to the Adafruit_NeoPixel
+// the same item.  The third parameter to the NeoPixel
 // constructor encodes the per-pixel byte offsets of the red, green
 // and blue primaries (plus white, if present) in the data stream --
 // the following #defines provide an easier-to-use named version for
@@ -64,109 +64,49 @@
 #define NEO_BRG  ((1 << 6) | (1 << 4) | (2 << 2) | (0))
 #define NEO_BGR  ((2 << 6) | (2 << 4) | (1 << 2) | (0))
 
-// RGBW NeoPixel permutations; all 4 offsets are distinct
-// Offset:         W          R          G          B
-#define NEO_WRGB ((0 << 6) | (1 << 4) | (2 << 2) | (3))
-#define NEO_WRBG ((0 << 6) | (1 << 4) | (3 << 2) | (2))
-#define NEO_WGRB ((0 << 6) | (2 << 4) | (1 << 2) | (3))
-#define NEO_WGBR ((0 << 6) | (3 << 4) | (1 << 2) | (2))
-#define NEO_WBRG ((0 << 6) | (2 << 4) | (3 << 2) | (1))
-#define NEO_WBGR ((0 << 6) | (3 << 4) | (2 << 2) | (1))
-
-#define NEO_RWGB ((1 << 6) | (0 << 4) | (2 << 2) | (3))
-#define NEO_RWBG ((1 << 6) | (0 << 4) | (3 << 2) | (2))
-#define NEO_RGWB ((2 << 6) | (0 << 4) | (1 << 2) | (3))
-#define NEO_RGBW ((3 << 6) | (0 << 4) | (1 << 2) | (2))
-#define NEO_RBWG ((2 << 6) | (0 << 4) | (3 << 2) | (1))
-#define NEO_RBGW ((3 << 6) | (0 << 4) | (2 << 2) | (1))
-
-#define NEO_GWRB ((1 << 6) | (2 << 4) | (0 << 2) | (3))
-#define NEO_GWBR ((1 << 6) | (3 << 4) | (0 << 2) | (2))
-#define NEO_GRWB ((2 << 6) | (1 << 4) | (0 << 2) | (3))
-#define NEO_GRBW ((3 << 6) | (1 << 4) | (0 << 2) | (2))
-#define NEO_GBWR ((2 << 6) | (3 << 4) | (0 << 2) | (1))
-#define NEO_GBRW ((3 << 6) | (2 << 4) | (0 << 2) | (1))
-
-#define NEO_BWRG ((1 << 6) | (2 << 4) | (3 << 2) | (0))
-#define NEO_BWGR ((1 << 6) | (3 << 4) | (2 << 2) | (0))
-#define NEO_BRWG ((2 << 6) | (1 << 4) | (3 << 2) | (0))
-#define NEO_BRGW ((3 << 6) | (1 << 4) | (2 << 2) | (0))
-#define NEO_BGWR ((2 << 6) | (3 << 4) | (1 << 2) | (0))
-#define NEO_BGRW ((3 << 6) | (2 << 4) | (1 << 2) | (0))
-
-// Add NEO_KHZ400 to the color order value to indicate a 400 KHz
-// device.  All but the earliest v1 NeoPixels expect an 800 KHz data
-// stream, this is the default if unspecified.  Because flash space
-// is very limited on ATtiny devices (e.g. Trinket, Gemma), v1
-// NeoPixels aren't handled by default on those chips, though it can
-// be enabled by removing the ifndef/endif below -- but code will be
-// bigger.  Conversely, can disable the NEO_KHZ400 line on other MCUs
-// to remove v1 support and save a little space.
-
 #define NEO_KHZ800 0x0000 // 800 KHz datastream
-#ifndef __AVR_ATtiny85__
-#define NEO_KHZ400 0x0100 // 400 KHz datastream
-#endif
 
-// If 400 KHz support is enabled, the third parameter to the constructor
-// requires a 16-bit value (in order to select 400 vs 800 KHz speed).
-// If only 800 KHz is enabled (as is default on ATtiny), an 8-bit value
-// is sufficient to encode pixel color order, saving some space.
-
-#ifdef NEO_KHZ400
-typedef uint16_t neoPixelType;
-#else
 typedef uint8_t  neoPixelType;
-#endif
 
-class Adafruit_NeoPixel {
+class NeoPixel {
 
  public:
 
   // Constructor: number of LEDs, PORTD bit number, LED type
-  Adafruit_NeoPixel(uint16_t n, uint8_t p=4, volatile uint8_t *PORT= &PORTC,neoPixelType t=NEO_GRB + NEO_KHZ800);
-  Adafruit_NeoPixel(void);
-  ~Adafruit_NeoPixel();
+  NeoPixel(uint16_t n, uint8_t p=4, volatile uint8_t *PORT= &PORTC,neoPixelType t=NEO_GRB + NEO_KHZ800);
+  NeoPixel(void);
+  ~NeoPixel();
 
   void begin(void);
   void show(void);
-  void setPinMask(uint8_t p);
-  void setPort(volatile uint8_t *p);
+  void setShowAll(uint8_t r, uint8_t g, uint8_t b);
+  void setPinPort(uint8_t p, volatile uint8_t *pt);
   void setPixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b);
-  void setPixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b, uint8_t w);
   void setPixelColor(uint16_t n, uint32_t c);
-  void setBrightness(uint8_t);
   void clear();
   void updateLength(uint16_t n);
   void updateType(neoPixelType t);
   uint8_t *getPixels(void) const;
-  uint8_t getBrightness(void) const;
   int8_t  getPin(void) { return ffs(pinMask)-1; }; // ffs, gcc builtin: Returns one plus the index of the least significant 1-bit of x, or if x is zero, returns zero.
   volatile uint8_t *getPort(void){ return port;};
   uint16_t numPixels(void) const;
   static uint32_t Color(uint8_t r, uint8_t g, uint8_t b);
-  static uint32_t Color(uint8_t r, uint8_t g, uint8_t b, uint8_t w);
   uint32_t getPixelColor(uint16_t n) const;
-  inline bool canShow(void)   {return 1;}; // { return (TCNT1 - endTime) >= 50L; }
+  inline bool canShow(void) { return ((TCNT1-endTime)>100); } // Assumes the Timer 1 runs at 2MHz, this is 50us.
 
 // private:
 
   bool
-#ifdef NEO_KHZ400  // If 400 KHz NeoPixel support enabled...
-    is800KHz,      // ...true if 800 KHz pixels
-#endif
     begun;         // true if begin() previously called
   uint16_t
     numLEDs,       // Number of RGB LEDs in strip
     numBytes;      // Size of 'pixels' buffer below (3 or 4 bytes/pixel)
   uint8_t
-    brightness,
    *pixels,        // Holds LED color values (3 or 4 bytes each)
     rOffset,       // Index of red byte within each 3- or 4-byte pixel
     gOffset,       // Index of green byte
-    bOffset,       // Index of blue byte
-    wOffset;       // Index of white byte (same as rOffset if no white)
-  uint32_t
+    bOffset;       // Index of blue byte
+  uint16_t
     endTime;       // Latch timing reference
 #ifdef __AVR__
   volatile uint8_t
@@ -177,4 +117,4 @@ class Adafruit_NeoPixel {
 
 };
 
-#endif // ADAFRUIT_NEOPIXEL_H
+#endif // NEOPIXEL_H

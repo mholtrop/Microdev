@@ -40,7 +40,7 @@
 //
 
 #ifndef UART_ALLOW_BAUD
-#define UART_ALLOW_BAUD 1          // Set to 0 fixes BAUD rate and saves space (320 bytes)
+#define UART_ALLOW_BAUD 0          // Set to 0 fixes BAUD rate and saves space (320 bytes)
 #define BAUD_TOL 2                 // Otherwise set in util/setbaud.h
 #endif
 
@@ -55,7 +55,7 @@
 #endif
 
 #ifndef UART_USE_BUFFERS
-#define UART_USE_BUFFERS  0         // Set to 1 if you want buffered code; 0 no buffers, so this all gets smaller.
+#define UART_USE_BUFFERS  1         // Set to 1 if you want buffered code; 0 no buffers, so this all gets smaller.
 #endif
 
 #if UART_USE_BUFFERS == 1
@@ -81,21 +81,25 @@ typedef uint16_t __rx_uart_buf_index_t;
 typedef uint8_t __rx_uart_buf_index_t;
 #endif
 
-extern volatile bool __rx_uart_receive_complete;
 ///
 extern __tx_uart_buf_index_t __tx_uart_buf_head;
 extern __tx_uart_buf_index_t __tx_uart_buf_tail;
 extern __tx_uart_buf_index_t __rx_uart_buf_head;
 extern __tx_uart_buf_index_t __rx_uart_buf_tail;
 
-inline bool uart_receive_complete(void){
+extern volatile uint8_t __rx_uart_receive_complete;
+inline uint8_t uart_receive_complete(void){
   return (__rx_uart_receive_complete);
 }
 
+inline void uart_empty_and_reset(void){
+  __rx_uart_buf_tail = __rx_uart_buf_head;    // Skip any remaining stuff in buffer.
+  __rx_uart_receive_complete = 0; // Ready for new.
+}
 #else
 
-inline bool uart_receive_complete(void){
-  return(true);
+inline uint8_t uart_receive_complete(void){
+  return(1);
 }
 
 #endif  // UART_USE_BUFFERS
@@ -106,7 +110,7 @@ void uart_tx_buffer_flush();       //! Flush the buffers. This is a blocking ope
 #define flush uart_tx_buffer_flush
 #endif
 void uart_init(unsigned char mode=0,uint32_t baud=BAUD); //! Initialize the UART code.
-bool uart_receive_complete(void);  //! Return the receive complete flag. Indicates a return (RET) or newline '\n' on the RX.
+uint8_t uart_receive_complete(void);  //! Return the receive complete flag. Indicates a return (RET) or newline '\n' on the RX.
 
 int  uart_putchar_buffered(char c, FILE *stream); //! Internal routine, buffered put.
 int  uart_putchar(char c, FILE *stream);          //! Internal routine, unbuffered put.

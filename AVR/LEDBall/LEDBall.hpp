@@ -9,14 +9,13 @@
 #define LEDBALL_H_
 
 //#define HardwareSerial_h
-#include "Adafruit_NeoPixel.h"
+#include "NeoPixel.h"
 
 // Configuration of the LED Ball.
-#define MAX_X  1
-#define MAX_Y 32
+#define MAX_X  2
+#define MAX_Y  16
 #define MAX_Z (MAX_X*MAX_Y)  // ODD strings are X/2 smaller!
 #define STANDARD
-
 
 #define EXTRA_STORE
 
@@ -31,7 +30,7 @@
 // This is different from the My_NeoPixel::Color(r,g,b) which packs (r<<16 | g<<8 | b)
 // and is thus a bit idiotic.
 // I don't know what is faster.
-class LEDBall : public Adafruit_NeoPixel {
+class LEDBall : public NeoPixel {
 
 public:
 	LEDBall(void);
@@ -62,7 +61,7 @@ public:
   }
   
 #ifdef EXTRA_STORE
-  void alloc_store(void);
+  int16_t alloc_store(void);
   void copy_to_store(){
     if(pixels_st) memcpy(pixels_st,pixels,MAX_Z*3);
   }

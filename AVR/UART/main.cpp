@@ -6,6 +6,7 @@
 #include <string.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/pgmspace.h>   // To use PSTR()
 
 //
 // By including the uart.cpp (and not uart.h) we can control the behavior of the
@@ -27,15 +28,12 @@
 //
 #include "uart.hpp"
 
-extern void __builtin_avr_delay_cycles(unsigned long);
-int my_fputs(const char *str, FILE *stream);
-
 int main(void) {
 
   sei();                    // Enable all interrupts.
   uart_init(0x3,BAUD);
   
-  fwrite("\r\nUART test code\r\n",1,18,stdout);
+  fputs_P(PSTR("\r\nUART test code\r\n"),stdout);
   uart_tx_buffer_flush();
 //  fputs("This is a really long sentence that will still fit in buffer\r\n",stdout);
 //  uart_tx_buffer_flush(); // Flush, i.e. block, else we will overflow on "Hello World."
@@ -49,7 +47,14 @@ int main(void) {
 
     if(uart_receive_complete()){
       fgets(strr,64,stdin);
-      strr[strlen(strr)-1]=0; // Chomp the newline.
+//      int jj;
+//      for(jj=0;jj<64;jj++){
+//        char c = fgetc(stdin);
+//        strr[jj]=c;
+//        if( c== 0) break;
+//      }
+//      if(jj>=63) fwrite("Input overflow\r\n",1,16,stdout);
+//      strr[strlen(strr)-1]=0; // Chomp the newline.
 //      fputs("\r\n len =",stdout);
 //      fputs(itoa(stdin->len,tmpbuf,10),stdout);
 // NOTE: fscanf works, but a little different from expected. It will ignore spaces

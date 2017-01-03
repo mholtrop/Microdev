@@ -20,7 +20,7 @@ __tx_uart_buf_index_t __tx_uart_buf_tail;
 __tx_uart_buf_index_t __rx_uart_buf_head;
 __tx_uart_buf_index_t __rx_uart_buf_tail;
 
-bool __rx_uart_receive_complete;
+volatile uint8_t __rx_uart_receive_complete;
 #endif
 
 // Global flag, telling any code that a complete string was received.
@@ -78,11 +78,11 @@ void uart_init(unsigned char mode, uint32_t /* baud is discarded */) {
     
   if( (mode&0x02) == 0){
     __uart_io.get = uart_getchar;
-    __rx_uart_receive_complete=true;  // Not buffering, so always complete.
+    __rx_uart_receive_complete=1;  // Not buffering, so always complete.
   }else{
     __uart_io.get = uart_getchar_buffered;
     UCSR0B |= _BV(RXCIE0);                // Receive interrupt enabled.
-    __rx_uart_receive_complete=false;  // No, no <CR> received yet.
+    __rx_uart_receive_complete=0;  // No, no <CR> received yet.
   }
   __tx_uart_buf_head = 0;
   __tx_uart_buf_tail = 0;
@@ -195,8 +195,8 @@ int uart_getchar_buffered(FILE *stream) {
     __rx_uart_buf_tail = (__rx_uart_buf_tail + 1) % RX_UART_BUF_SIZE; //next_buffer_loc;
     return c;
   }else{ // We caught up with the tail. The buffer is empty, so be ready for next receive.
-    __rx_uart_receive_complete=false;
-    return '\0'; // Terminate the string.
+    if(__rx_uart_receive_complete>0) __rx_uart_receive_complete--;
+    return 0; // Terminate the string.
   }
   return -1;
 }
@@ -222,7 +222,7 @@ ISR(USART_RX_vect){
   __rx_uart_buf_index_t rx_i = (__rx_uart_buf_head + 1) % RX_UART_BUF_SIZE;
   if(rx_i != __rx_uart_buf_tail){                     // Buffer still has space.
     if( c == 13 /* ^m */ || c == '\n' || c == '\r'){  // End of line
-      __rx_uart_receive_complete=true; // Tell the code that we have something complete.
+      __rx_uart_receive_complete++; // Tell the code that we have something complete.
       __rx_uart_buf[__rx_uart_buf_head] = 0; // Terminate string with 0, eat the c.
     }else{
       __rx_uart_buf[__rx_uart_buf_head] = c;
@@ -235,7 +235,8 @@ ISR(USART_RX_vect){
   }else{ // Buffer is full.
     // Now what? - we *could* block, or we can throw the input away.
     // If we throw it away, do we throw the entire buffer?
-    __rx_uart_receive_complete=true; // Pretend you got a return, so process the buffer.
+    __rx_uart_receive_complete++; // Pretend you got a return, so process the buffer.
+    __rx_uart_buf[__rx_uart_buf_head] = 0;
   }
 }
   

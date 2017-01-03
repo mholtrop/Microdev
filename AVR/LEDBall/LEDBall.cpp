@@ -7,12 +7,12 @@
 
 #include "LEDBall.hpp"
 
-LEDBall::LEDBall(): Adafruit_NeoPixel() {
+LEDBall::LEDBall(): NeoPixel() {
 	
 
 }
 
-LEDBall::LEDBall(uint8_t p,volatile uint8_t *pt,neoPixelType t): Adafruit_NeoPixel(MAX_Z,p,pt,t){
+LEDBall::LEDBall(uint8_t p,volatile uint8_t *pt,neoPixelType t): NeoPixel(MAX_Z,p,pt,t){
   
 }
 
@@ -54,12 +54,16 @@ void LEDBall::deltaPixelColor(uint16_t i,int16_t r,int16_t g,int16_t b,uint8_t *
  };
 
 #ifdef EXTRA_STORE
-void LEDBall::alloc_store(){
-  if(numBytes <=1) return;
+int16_t LEDBall::alloc_store(){
+  if(numBytes <=0) return -1;
   if(pixels_st) free(pixels_st);
   if((pixels_st = (uint8_t *)malloc(numBytes))) {
     memset(pixels_st, 0x12, numBytes);
+    return(numBytes);
+  }else{
+    return -2;
   }
+
 }
 
 void LEDBall::swap_store(){

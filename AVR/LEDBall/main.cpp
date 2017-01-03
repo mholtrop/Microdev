@@ -11,8 +11,8 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include "uart.hpp"        // This must go before Arduino.h, otherwise it will include the HardwareSerial.h
-#define HardwareSerial_h   // Don't led Arduino grab the serial.
 #include "LEDBall.hpp"
+#include <avr/pgmspace.h>   // To use PSTR()
 
 #define L_PIN1  4
 #define L_PORT1 PORTD      // Output is on PD4, pin 6
@@ -26,76 +26,108 @@ void timer1_init(void){
 }
 
 int main(void) {
-  unsigned long start,stop;
+//  unsigned long start,stop;
+  char c=' ';
 
-  uart_init(0x0,BAUD);
+  sei();
+  uart_init(0x3,BAUD);
   timer1_init();
   
-  printf("\n\rHello. This is LEDBall Code V0.3.1\r\n");
+  fputs_P(PSTR("\n\rLEDBall Code V0.3.3\r\n"),stdout);
   flush();
-  DDRD |= _BV(4) | _BV(3);  // Pin 6 of the chip is on port PD4
-  PORTD = 0;
-  PORTD |= _BV(3);
-  start = TCNT1;
-  printf("Starting with micros = %ld\r\n",start);
-//  Serial.println(start);
-  
-  PORTD &= ~_BV(3);
+
   LEDBall leds(L_PIN1, &L_PORT1, NEO_GRB + NEO_KHZ800);
 
-  start = TCNT1;
-  printf("Now we have micros   = %ld\r\n",start);
-
-  printf("Red...\r\n");
+  leds.clear();
+  fputs_P(PSTR("alloc\r\n"),stdout);
   flush();
-  start = TCNT1;
-  leds.setBaseColor(255,0,0,leds.pixels);
-  stop  = TCNT1;
+  leds.alloc_store();
+//  TCNT1 = 0;
+//  start = TCNT1;
+//  leds.copy_from_store(); //  ~44 us
+//  leds.swap_store();        // ~193 us
+  leds.setShowAll(255,0,0);
+//  stop  = TCNT1;
+//  printf("1: %ld us \r\n",(stop-start)/2);
+  
+//  TCNT1 = 0;
+//  start = TCNT1;
+//  leds.show();  // ~ 16510 us
+//  stop  = TCNT1;
+//  printf("3: %ld us \r\n",(stop-start)/2);
+  _delay_ms(150);
+  
+//  start = TCNT1;
+  leds.setShowAll(0,0,0);
+//  stop  = TCNT1;
+//  printf("2: %ld us \r\n",(stop-start)/2);
+  _delay_ms(300);
+  
+//  start = TCNT1;
+//  leds.show();
+//  stop  = TCNT1;
+//  printf("3: %ld us \r\n",(stop-start)/2);
+//  _delay_ms(100);
 //
-  printf("1: %ld us\r\n",(stop - start)/2);
-  flush();
-
-  TCNT1 = 0;
-  start = TCNT1;
+  leds.setShowAll(0,255,0);
+  _delay_ms(150);
+  leds.setShowAll(0,0,0);
+  _delay_ms(300);
+  leds.setShowAll(0,0,255);
+  _delay_ms(150);
+  leds.setShowAll(0,0,0);
+  _delay_ms(300);
+  leds.clear();
   leds.show();
-  stop  = TCNT1;
-  printf("2: %ld us \r\n",(stop-start)/2);
-
-  leds.setBaseColor(0,0,0,leds.pixels);
-  _delay_ms(500);
-  leds.show();
-  printf("off\r\n");
   
-////  _delay_ms(1000);
-////  Serial.println("All Green...");
-////  leds.setBaseColor(0,255,0);
-////  leds.show();
-////  _delay_ms(500);
-////  leds.setBaseColor(0,0,0);
-////  leds.show();
-////  _delay_ms(1000);
-////  Serial.println("All Blue...");
-////  leds.setBaseColor(0,0,255);
-////  leds.show();
-////  _delay_ms(500);
-////  leds.setBaseColor(0,0,0);
-////  leds.show();
-////  _delay_ms(1000);
-////  Serial.println("All White...");
-////  leds.setBaseColor(255,255,255);
-////  leds.show();
-////  _delay_ms(500);
-////  leds.setBaseColor(0,0,0);
-////  leds.show();
-////  Serial.println("Off, ready for input.");
-  
+  fputs_P(PSTR("off\r\n"),stdout);
   while (1) {
-//    leds.copy_to_store();
-//    leds.copy_from_store();
-//    if (Serial.available()) {
-//      char s_in = Serial.read();
-//     Serial.print(s_in);
-//    }
+    //    leds.copy_to_store();
+    //    leds.copy_from_store();
+    if (uart_receive_complete()) {
+//      char strr[64];
+//      fgets(strr,64,stdin);
+//      c = strr[0];
+      c= fgetc(stdin);
+      putc(c,stdout);
+      switch( c ){
+        uint8_t loc,r,g,b;
+        case 'B':
+          leds.setShowAll(0,0,255);
+          break;
+        case 'G':
+          leds.setShowAll(0,255,0);
+          break;
+        case 'O': // Off
+          leds.clear();
+          leds.show();
+          break;
+        case 'P':
+          leds.setShowAll(255,0,255);
+          break;
+        case 'R':
+          leds.setShowAll(255,0,0);
+          break;
+        case 'W': // Warm White
+          leds.setBaseColor(255,110,30);
+          leds.show();
+          break;
+        case 's':
+          leds.show();
+          break;
+        case 'x':  // Set indiviual pixel at x in main array
+          scanf("%hhu %hhu %hhu %hhu",&loc,&r,&g,&b);
+          leds.setPixelColor(loc,r,g,b);
+          break;
+        case 'y':  // Set indiviual pixel at x in alt array
+          scanf("%hhu %hhu %hhu %hhu",&loc,&r,&g,&b);
+          leds.setPixelColor(loc,r,g,b);
+          break;
+        case 'z':
+          leds.swap_store();
+          break;
+      }
+    }
 	}
 
   return 0; // never reached
