@@ -12,8 +12,8 @@
 #include "NeoPixel.h"
 
 // Configuration of the LED Ball.
-#define MAX_X  2
-#define MAX_Y  16
+#define MAX_X  8
+#define MAX_Y  32
 #define MAX_Z (MAX_X*MAX_Y)  // ODD strings are X/2 smaller!
 #define STANDARD
 
