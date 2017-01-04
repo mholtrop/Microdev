@@ -12,9 +12,15 @@
 #include "NeoPixel.h"
 
 // Configuration of the LED Ball.
+#ifndef MAX_X
 #define MAX_X  8
+#endif
+#ifndef MAX_Y
 #define MAX_Y  32
+#endif
+
 #define MAX_Z (MAX_X*MAX_Y)  // ODD strings are X/2 smaller!
+
 #define STANDARD
 
 #define EXTRA_STORE
@@ -49,9 +55,13 @@ public:
   };
   
   void setBaseColor(uint8_t r,uint8_t g,uint8_t b,uint8_t *pix=NULL);
+  void multBaseColor(float r,float g,float b,uint8_t *pix=NULL); // Change all pixels by r,g,b in color space.
   void deltaBaseColor(int16_t r,int16_t g,int16_t b,uint8_t *pix=NULL); // Change all pixels by r,g,b in color space.
-  void deltaPixelColor(uint16_t i,int16_t r,int16_t g,int16_t b,uint8_t *pix=NULL); // Change all pixels by r,g,b in color space.
-  void setPixelColorXY(int x,int y,uint8_t r,uint8_t g,uint8_t b,uint8_t *pix=NULL){
+  void multPixelColor(uint16_t i,float r,float g,float b,uint8_t *pix=NULL); // Change all pixels by r,g,b in color space.
+   void deltaPixelColor(uint16_t i,int16_t r,int16_t g,int16_t b,uint8_t *pix=NULL); // Change all pixels by r,g,b in color space.
+  void setPixelColor(uint16_t loc,uint8_t r,uint8_t g,uint8_t b,uint8_t *pix=NULL);
+
+  void setPixelColorXY(uint16_t x,uint16_t y,uint8_t r,uint8_t g,uint8_t b,uint8_t *pix=NULL){
     uint16_t i=getIndex(x,y);
     if(pix == NULL || pix == pixels){
       setPixelColor(i,r,g,b);
@@ -60,12 +70,20 @@ public:
     }
   }
   
+  void Temp_to_RGB(uint16_t T, uint8_t *r, uint8_t *g, uint8_t *b);
+  
 #ifdef EXTRA_STORE
   int16_t alloc_store(void);
+  
   void copy_to_store(){
     if(pixels_st) memcpy(pixels_st,pixels,MAX_Z*3);
   }
   
+  void copy_store(uint8_t *pix1,uint8_t *pix2){
+    // Copy the pixels from pix2 into pix1 using memcpy.
+    if(pix1 && pix2)memcpy(pix1,pix2,MAX_Z*3);
+  }
+
   void copy_from_store(){
     if(pixels_st)memcpy(pixels,pixels_st,MAX_Z*3);
   }

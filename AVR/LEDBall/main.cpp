@@ -33,7 +33,8 @@ int main(void) {
   uart_init(0x3,BAUD);
   timer1_init();
   
-  fputs_P(PSTR("\n\rLEDBall Code V0.3.3\r\n"),stdout);
+  fputs_P(PSTR("\n\rLEDBall Code V0.3.4\r\n"),stdout);
+  printf("size of float=%u double=%u\r\n",sizeof(float),sizeof(double));
   flush();
 
   LEDBall leds(L_PIN1, &L_PORT1, NEO_GRB + NEO_KHZ800);
@@ -92,28 +93,54 @@ int main(void) {
       putc(c,stdout);
       switch( c ){
         uint8_t loc,r,g,b;
-        case 'B':
+        float ff;
+          // "Instant" settings do not change the pixel array.
+          // A "show()" after these settings will restore the state of the LEDS.
+        case 'B': // Instant set Blue
           leds.setShowAll(0,0,255);
           break;
-        case 'G':
+        case 'G': // Instant set Green
           leds.setShowAll(0,255,0);
           break;
-        case 'O': // Off
-          leds.clear();
-          leds.show();
+        case 'O': // Instant off
+          leds.setShowAll(0,0,0);
           break;
-        case 'P':
+        case 'P': // Instant Purple
           leds.setShowAll(255,0,255);
           break;
-        case 'R':
+        case 'R': // Instant Red
           leds.setShowAll(255,0,0);
           break;
-        case 'W': // Warm White
-          leds.setBaseColor(255,110,30);
-          leds.show();
+        case 'W': // Instant Warm White
+          leds.setShowAll(255,110,30);
+          break;
+        case '+': // Increase brightness of base by 5% for each +
+          ff=1.05;
+          while(fgetc(stdin)=='+') ff *= 1.05;
+          leds.multBaseColor(ff,ff,ff);
+          break;
+        case '-': // Decrease brightness of base by 5% for each -
+          ff = 0.95;
+          while(fgetc(stdin)=='-') ff *= 0.95;
+          leds.multBaseColor(ff,ff,ff);
+          break;
+        case 'b': // Set base color to r,g,b
+          scanf("%hhu %hhu %hhu",&r,&g,&b);
+          leds.setBaseColor(r,g,b);
           break;
         case 's':
           leds.show();
+          break;
+        case 't':
+          uint16_t t;
+          scanf("%u",&t);
+          leds.Temp_to_RGB(t,&r,&g,&b);
+          printf("T= %u, rgb=[%3d,%3d,%3d] \r\n",t,r,g,b);
+          flush();
+          leds.setBaseColor(r,g,b);
+          break;
+        case 'w': // Set base color to warm white
+          leds.setBaseColor(255,110,30);
           break;
         case 'x':  // Set indiviual pixel at x in main array
           scanf("%hhu %hhu %hhu %hhu",&loc,&r,&g,&b);
@@ -121,7 +148,7 @@ int main(void) {
           break;
         case 'y':  // Set indiviual pixel at x in alt array
           scanf("%hhu %hhu %hhu %hhu",&loc,&r,&g,&b);
-          leds.setPixelColor(loc,r,g,b);
+          leds.setPixelColor(loc,r,g,b,leds.pixels_st);
           break;
         case 'z':
           leds.swap_store();
