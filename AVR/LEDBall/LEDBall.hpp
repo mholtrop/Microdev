@@ -21,7 +21,9 @@
 
 #define MAX_Z (MAX_X*MAX_Y)  // ODD strings are X/2 smaller!
 
-#define STANDARD
+#ifndef STANDARD
+#define STANDARD 0
+#endif
 
 #define EXTRA_STORE
 
@@ -46,11 +48,17 @@ public:
   uint16_t getIndex(uint8_t x, uint8_t y){  // Compute the pixel index from the x,y location.
     if( x>= MAX_X) x=MAX_X-1;      // Check to not go over limit.
     if( y>= MAX_Y) y=MAX_Y-1;
-#ifdef STANDARD
+#if STANDARD == 0
     return( x*MAX_Y + y);
-#else   // ODD type, where every odd (1,3,5) strip has a pixel less. UGH
-    if( x%2 == 1 && y = MAX_Y-1) y = MAX_Y -2
-    return( x*MAX_Y + y - ( x/2 ) )
+#elif STANDARD == 1   // ODD type, where every odd (1,3,5) strip has a pixel less. UGH
+    if( x%2 == 1 && y == (MAX_Y-1)) y = MAX_Y -2;
+    return( x*MAX_Y + y - ( x/2 ) );
+#elif STANDARD == 2  // Reversing type
+// #warning Standard 2 code.
+    if( x < MAX_X/2) return( (2*x*MAX_Y) + y);  // Y is normal, x is two times further
+    return( 2*(x+1-MAX_X/2)*MAX_Y - y - 1);
+#else 
+#error STANDARD has a value that I do not know about.
 #endif
   };
   
@@ -60,16 +68,9 @@ public:
   void multPixelColor(uint16_t i,float r,float g,float b,uint8_t *pix=NULL); // Change all pixels by r,g,b in color space.
    void deltaPixelColor(uint16_t i,int16_t r,int16_t g,int16_t b,uint8_t *pix=NULL); // Change all pixels by r,g,b in color space.
   void setPixelColor(uint16_t loc,uint8_t r,uint8_t g,uint8_t b,uint8_t *pix=NULL);
-
-  void setPixelColorXY(uint16_t x,uint16_t y,uint8_t r,uint8_t g,uint8_t b,uint8_t *pix=NULL){
-    uint16_t i=getIndex(x,y);
-    if(pix == NULL || pix == pixels){
-      setPixelColor(i,r,g,b);
-    }else{
-      
-    }
-  }
-  
+  uint32_t getPixelColorXY(uint16_t x,uint16_t y,uint8_t *pix=NULL);
+  void setPixelColorXY(uint16_t x,uint16_t y,uint32_t c,uint8_t *pix=NULL);
+  void setPixelColorXY(uint16_t x,uint16_t y,uint8_t r,uint8_t g,uint8_t b,uint8_t *pix=NULL);
   void Temp_to_RGB(uint16_t T, uint8_t *r, uint8_t *g, uint8_t *b);
   
 #ifdef EXTRA_STORE
@@ -89,6 +90,9 @@ public:
   }
   
   void swap_store();
+  
+  void linear_chase(uint8_t *pix=NULL);
+  void rotate_z(uint8_t n,uint8_t *pix=NULL);
   
 public:
   

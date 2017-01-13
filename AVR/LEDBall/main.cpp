@@ -17,30 +17,66 @@
 #define L_PIN1  4
 #define L_PORT1 PORTD      // Output is on PD4, pin 6
 
+volatile uint32_t time_s;
+
+ISR(TIMER1_COMPA_vect) {
+  time_s++;
+  TCNT1=0;
+}
+
+
 void timer1_init(void){
+  
+  PORTD ^= _BV(7); // Toggle the LED on Pin 13
+  
   // Setup timer1 to keep track of microseconds.
   TCCR1A = 0; // Normal operation (no compare, no PWM)
-  TCCR1B = (_BV(CS11)) ; // clk_io/8 - system clock = 16 MHz, so 2 MHz clock.
+ //  In Clear Timer on Compare or CTC mode (WGM02:0 = 2), the OCR0A Register is used to manipulate
+//  the counter resolution. In CTC mode the counter is cleared to zero when the counter value (TCNT0) matches the OCR0A.
+//  Page 98
+//  TCCR1B |= _BV(WGM12); // This should saves us from resetting the timer in the interrupt routine. Doesn't work?
+  
+  OCR1A = 62500;        // Compare A once per second.
+
+  TIMSK1 = _BV(OCIE1A);      // Generate interrupt on compare A match.
+  
+//  TCCR1A |= (1 << COM1A0); // Enable timer 1 Compare Output channel A in toggle mode (monitor)
+  
   TCCR1C = 0; // Normal
   TCNT1 = 0;  // Start the timer at zero.
+  
+  TCCR1B = (_BV(CS12)) ; // Start timer: clk_io/256 - system clock = 16 MHz, so 16 us per count
+  
+  time_s = 0;
+}
+
+uint32_t gettime_ms(void){ // Return approximate ms since timer1_init
+  return(time_s*1000+TCNT1*0.016);
 }
 
 int main(void) {
-//  unsigned long start,stop;
+
+  unsigned long start,stop;
+  uint32_t rot_delay=0;
+  uint32_t rot_delay_time=0;
+  uint32_t ch_delay=0;
+  uint32_t ch_delay_time=0;
+  
   char c=' ';
 
+  DDRD |= _BV(7);
+  DDRB |= _BV(1);
+  
   sei();
   uart_init(0x3,BAUD);
   timer1_init();
   
   fputs_P(PSTR("\n\rLEDBall Code V0.3.4\r\n"),stdout);
-  printf("size of float=%u double=%u\r\n",sizeof(float),sizeof(double));
   flush();
 
   LEDBall leds(L_PIN1, &L_PORT1, NEO_GRB + NEO_KHZ800);
 
   leds.clear();
-  fputs_P(PSTR("alloc\r\n"),stdout);
   flush();
   leds.alloc_store();
 //  TCNT1 = 0;
@@ -67,7 +103,6 @@ int main(void) {
 //  start = TCNT1;
 //  leds.show();
 //  stop  = TCNT1;
-//  printf("3: %ld us \r\n",(stop-start)/2);
 //  _delay_ms(100);
 //
   leds.setShowAll(0,255,0);
@@ -81,7 +116,8 @@ int main(void) {
   leds.clear();
   leds.show();
   
-  fputs_P(PSTR("off\r\n"),stdout);
+  PORTD ^= _BV(7); // Toggle the LED on Pin 13
+
   while (1) {
     //    leds.copy_to_store();
     //    leds.copy_from_store();
@@ -92,7 +128,8 @@ int main(void) {
       c= fgetc(stdin);
       putc(c,stdout);
       switch( c ){
-        uint8_t loc,r,g,b;
+        uint8_t loc,x,y,r,g,b;
+//        uint32_t tmp_c;
         float ff;
           // "Instant" settings do not change the pixel array.
           // A "show()" after these settings will restore the state of the LEDS.
@@ -111,6 +148,9 @@ int main(void) {
         case 'R': // Instant Red
           leds.setShowAll(255,0,0);
           break;
+        case 'T':
+          printf_P(PSTR("3: %6lu.%06lu s \r\n"),time_s,(16UL*TCNT1));
+          break;
         case 'W': // Instant Warm White
           leds.setShowAll(255,110,30);
           break;
@@ -128,6 +168,32 @@ int main(void) {
           scanf("%hhu %hhu %hhu",&r,&g,&b);
           leds.setBaseColor(r,g,b);
           break;
+        case 'c':
+          leds.clear();
+          break;
+        case 'd':
+          printf("\r\n");
+          for(x=0;x<MAX_X;++x) for(y=0;y<MAX_Y;++y){
+            printf("(%3hhu,%3hhu) 0x%8lX \r\n",x,y,leds.getPixelColorXY(x,y));
+            flush();
+          }
+          start= TCNT1;
+          leds.rotate_z(1);
+          stop = TCNT1;
+          printf("Time= %lu\r\n",stop-start);
+//          leds.linear_chase();
+          leds.show();
+          break;
+        case 'q':
+          scanf("%lu",&ch_delay);
+          ch_delay_time = gettime_ms();
+          printf_P(PSTR("\r\nCh= %lu\r\n"),ch_delay);
+          break;
+        case 'r':
+          scanf("%lu",&rot_delay);
+          rot_delay_time = gettime_ms();
+          printf_P(PSTR("\r\nRot = %lu\r\n"),rot_delay);
+          break;
         case 's':
           leds.show();
           break;
@@ -142,20 +208,42 @@ int main(void) {
         case 'w': // Set base color to warm white
           leds.setBaseColor(255,110,30);
           break;
-        case 'x':  // Set indiviual pixel at x in main array
+        case 'i':  // Set indiviual pixel at loc in main array
           scanf("%hhu %hhu %hhu %hhu",&loc,&r,&g,&b);
           leds.setPixelColor(loc,r,g,b);
           break;
-        case 'y':  // Set indiviual pixel at x in alt array
+        case 'j':  // Set indiviual pixel at loc in alt array
           scanf("%hhu %hhu %hhu %hhu",&loc,&r,&g,&b);
           leds.setPixelColor(loc,r,g,b,leds.pixels_st);
+          break;
+        case 'x':  // Set indiviual pixel at x,y in main array
+          scanf("%hhu %hhu %hhu %hhu %hhu",&x,&y,&r,&g,&b);
+          printf("x %hhu %hhu %hhu %hhu %hhu",x,y,r,g,b);
+          leds.setPixelColorXY(x,y,r,g,b);
+          break;
+        case 'y':  // Set indiviual pixel at x,y in alt array
+          scanf("%hhu %hhu %hhu %hhu %hhu",&x,&y,&r,&g,&b);
+          leds.setPixelColorXY(x,y,r,g,b,leds.pixels_st);
           break;
         case 'z':
           leds.swap_store();
           break;
       }
     }
-	}
+    
+    if(rot_delay>0 && (gettime_ms() - rot_delay_time) > rot_delay ){ // Time to rotate the patern.
+      rot_delay_time = gettime_ms();
+      leds.rotate_z(1);
+      leds.show();
+    }
+    
+    if(ch_delay>0 && (gettime_ms() - ch_delay_time) > ch_delay ){ // Time to rotate the patern.
+      ch_delay_time = gettime_ms();
+      leds.linear_chase();
+      leds.show();
+    }
+    
+  }
 
   return 0; // never reached
 }

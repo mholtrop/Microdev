@@ -67,12 +67,12 @@ void LEDBall::Temp_to_RGB(uint16_t T, uint8_t *r, uint8_t *g, uint8_t *b){
   max = max/255.;
   for (c = 0; c < 3; c++) RGB[c] = RGB[c] / max;
   
-  printf("T=%u, xD = %lf, yD = %lf, X=%lf, Z=%lf \r\n",T,xD,yD,X,Z);
+//  printf("T=%u, xD = %lf, yD = %lf, X=%lf, Z=%lf \r\n",T,xD,yD,X,Z);
   flush();
   (*r) =(int) (RGB[0]>0?RGB[0]+0.5:0);
   (*g) =(int) (RGB[1]>0?RGB[1]+0.5:0);
   (*b) =(int) (RGB[2]>0?RGB[2]+0.5:0);
-  printf("RGB = [%lf,%lf,%lf] = [%d,%d,%d]\r\n",RGB[0],RGB[1],RGB[2],*r,*g,*b);
+//  printf("RGB = [%lf,%lf,%lf] = [%d,%d,%d]\r\n",RGB[0],RGB[1],RGB[2],*r,*g,*b);
   flush();
 }
 
@@ -90,6 +90,47 @@ void LEDBall::setBaseColor(uint8_t r,uint8_t g,uint8_t b, uint8_t *pix){ // Set 
     pix[n+bOffset] = b;
   }
 };
+
+void LEDBall::setPixelColorXY(uint16_t x,uint16_t y,uint32_t c,uint8_t *pix){
+  if(pix == NULL) pix=pixels;
+  uint16_t i=getIndex(x,y);
+//  c = c & 0xFFF0;
+//  uint32_t *p = (uint32_t *)&(pix[i*3]);
+//  *p = (*p & 0x000F ) + c;
+  
+  uint8_t *p,
+  r = (uint8_t)(c >> 16),
+  g = (uint8_t)(c >>  8),
+  b = (uint8_t)c;
+  
+  p = &pixels[i * 3];
+  
+  p[rOffset] = r;
+  p[gOffset] = g;
+  p[bOffset] = b;
+  
+  
+}
+
+uint32_t LEDBall::getPixelColorXY(uint16_t x,uint16_t y, uint8_t *pix){
+  if(pix == NULL) pix=pixels;
+  uint16_t i=getIndex(x,y);
+  uint8_t *p;
+  
+  p = &pixels[i * 3];
+  // No brightness adjustment has been made -- return 'raw' color
+  return ((uint32_t)p[rOffset] << 16) |
+  ((uint32_t)p[gOffset] <<  8) |
+  (uint32_t)p[bOffset];
+}
+
+
+void LEDBall::setPixelColorXY(uint16_t x,uint16_t y,uint8_t r,uint8_t g,uint8_t b,uint8_t *pix){
+ if(pix == NULL) pix=pixels;
+  uint16_t i=getIndex(x,y);
+  setPixelColor(i,r,g,b,pix);
+}
+
 
 void LEDBall::setPixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b,uint8_t *pix) {
   // Set the pixel at n for array pix.
@@ -143,6 +184,7 @@ void LEDBall::deltaPixelColor(uint16_t i,int16_t r,int16_t g,int16_t b,uint8_t *
   pix[n+bOffset] += b;
  };
 
+
 #ifdef EXTRA_STORE
 int16_t LEDBall::alloc_store(){
   if(numBytes <=0) return -1;
@@ -175,3 +217,37 @@ void LEDBall::swap_store(){
   }
 }
 #endif
+
+void LEDBall::linear_chase(uint8_t *pix){
+// Chase the pattern down the leds as if they were all on one long string.
+//
+  uint32_t tmp_c = getPixelColorXY(0,0,pix);
+  for(uint8_t x=0;x<MAX_X; ++x){     // Note: if you use uint then you cannot count down with x>=0, since that is always true.
+    for(uint8_t y=0;y<MAX_Y; ++y){
+      uint8_t i = MAX_X-1-x;
+      uint8_t j = MAX_Y-1-y;
+      uint32_t c = getPixelColorXY(i,j,pix);
+      if(i==0 && j == 0){
+        setPixelColorXY(0,1,tmp_c,pix);
+      }else{
+        setPixelColorXY(((j+1)>=MAX_Y? ((i+1)%MAX_X) : i),(j+1)%MAX_Y,c,pix);
+      }
+    }
+  }
+
+}
+
+
+void LEDBall::rotate_z(uint8_t n,uint8_t *pix){
+  // Rotate the array around z by amount n. Note that n is in terms of x strings.
+  //
+  for(uint8_t iy=0;iy<MAX_Y;iy++){
+    int32_t tmp_c= getPixelColorXY(MAX_X-1,iy,pix);
+    for(int ix=MAX_X-1; ix>0; --ix ){
+      int32_t c = getPixelColorXY(ix-1,iy,pix);
+      setPixelColorXY(ix,iy,c);
+    }
+    setPixelColorXY(0,iy,tmp_c);
+  }
+}
+
