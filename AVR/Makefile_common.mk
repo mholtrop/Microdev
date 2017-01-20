@@ -116,7 +116,7 @@ OPTIMIZE = -O$(OPTLEVEL)
 endif
 
 # compiler
-CFLAGS +=$(OPTIMIZE) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -DBAUD=$(BAUD) \
+CFLAGS +=$(OPTIMIZE) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -DBAUD=$(BAUD) $(OTHER_DEFINES) \
 	-fpack-struct -fshort-enums             \
 	-funsigned-bitfields -funsigned-char    \
 	-Wall -Wstrict-prototypes               \
@@ -124,7 +124,7 @@ CFLAGS +=$(OPTIMIZE) -mmcu=$(MCU) -DF_CPU=$(F_CPU) -DBAUD=$(BAUD) \
 #	$(filter %.lst, $(<:.c=.lst)))
 
 # c++ specific flags
-CXXFLAGS +=$(OPTIMIZE) -mmcu=$(MCU)  -DF_CPU=$(F_CPU) -DBAUD=$(BAUD) \
+CXXFLAGS +=$(OPTIMIZE) -mmcu=$(MCU)  -DF_CPU=$(F_CPU) -DBAUD=$(BAUD)  $(OTHER_DEFINES) \
 	-fno-exceptions 		           \
 	-fpack-struct -fshort-enums     	   \
 	-funsigned-bitfields -funsigned-char       \

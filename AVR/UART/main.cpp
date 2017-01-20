@@ -16,24 +16,19 @@
 // Ofcourse, you can also edit the uart.h to get the behavior you want, and then
 // do a normal compile of uart.cpp and link with main.cpp
 //
-// Additional notes:
-// It took a long investigation of what was happening with fputs(). I discovered that
-// fputs() is replaced by fwrite() by the compiler when outputting a string. The fwrite() code
-// requires that stream->put() returns a zero, otherwise it is an error and it stops.
-//
-// So, for the fastest and most compact code, you want to use fwrite exclusively. Using fputs with -Os
-// (optimize for size) also works and won't replace some fputs with fwrite. Otherwise, if you use fputs()
-// you will include both fputs() code and fwrite() code.
-// You can also use printf(), which is very versatile but adds a lot of extra program space.
-//
+
 #include "uart.hpp"
+#include <util/delay.h>
 
 int main(void) {
 
   sei();                    // Enable all interrupts.
   uart_init(0x3,BAUD);
   
+  UART_CTS_PORT |= _BV(UART_CTS_PIN);
   fputs_P(PSTR("\r\nUART test code\r\n"),stdout);
+  flush();
+  UART_CTS_PORT &= ~_BV(UART_CTS_PIN);
   uart_tx_buffer_flush();
 //  fputs("This is a really long sentence that will still fit in buffer\r\n",stdout);
 //  uart_tx_buffer_flush(); // Flush, i.e. block, else we will overflow on "Hello World."
@@ -42,11 +37,16 @@ int main(void) {
 //  char tmpbuf[10];
 //  uint32_t i;
   
+  int count=0;
+  
   while(1) {
     //    __builtin_avr_delay_cycles(0);
 
     if(uart_receive_complete()){
+      count++;
+//      uart_print_rx_buffer();
       fgets(strr,64,stdin);
+//      uart_print_rx_buffer();
 //      int jj;
 //      for(jj=0;jj<64;jj++){
 //        char c = fgetc(stdin);
@@ -61,14 +61,25 @@ int main(void) {
 // and then get the string and return on the next space. IF you use it with a specifier,
 // "x %s", or something, it may hang on never getting the input and never getting an EOF.
 //
-//      fscanf(stdin,"%s",strr);
+//        fscanf(stdin,"%s",strr);
 
 // Note: printf works as expected, BUT note that it takes a bunch more code space!
-//      printf("You wrote: l=%d\r\n [%s] \r\n",stdin->len,strr );
-      fwrite("You wrote: [",1,12,stdout);
-      fwrite(strr,1,strlen(strr),stdout);
-      fwrite("]\r\n",1,3,stdout);
+      
+      printf("i:%3d urc=%1u [%s]\r\n",count,__rx_uart_receive_complete,strr );
+
+      //        fwrite("[",1,1,stdout);
+//        fwrite(strr,1,strlen(strr),stdout);
+//        fwrite("]\r\n",1,1,stdout);
+//        printf("(0x%hhx)",strr[0]);
+//        fwrite("<",1,1,stdout);
+//      fwrite(&strr[1],1,1,stdout);
+//      fwrite(">",1,1,stdout);
+//      printf(" c=%d,%d\n",count,strlen(strr));
+//      fwrite("]\r\n",1,3,stdout);
+//        printf("l:%d %c %c",strlen(strr),strr[0],strr[strlen(strr)-1]);
     }
+    
+    _delay_ms(500.);
   }
   
   return 0;

@@ -10,6 +10,7 @@
 FILE __uart_io;
 
 #if UART_USE_BUFFERS == 1
+
 // Buffers for the buffered uart
 char __tx_uart_buf[TX_UART_BUF_SIZE];
 char __rx_uart_buf[RX_UART_BUF_SIZE];
@@ -17,13 +18,78 @@ char __rx_uart_buf[RX_UART_BUF_SIZE];
 // Buffer pointers, to make a circular buffer.
 __tx_uart_buf_index_t __tx_uart_buf_head;
 __tx_uart_buf_index_t __tx_uart_buf_tail;
-__tx_uart_buf_index_t __rx_uart_buf_head;
-__tx_uart_buf_index_t __rx_uart_buf_tail;
+__rx_uart_buf_index_t __rx_uart_buf_head;
+__rx_uart_buf_index_t __rx_uart_buf_tail;
 
-volatile uint8_t __rx_uart_receive_complete;
+volatile uint16_t __rx_uart_receive_complete; // Global flag, count the number of <LF> in the buffer, i.e. how many complete strings.
+
+uint16_t uart_receive_complete(void){
+  return (__rx_uart_receive_complete);
+}
+
+void uart_empty_and_reset(void){
+  __rx_uart_buf_tail = __rx_uart_buf_head;    // Skip any remaining stuff in buffer.
+  __rx_uart_receive_complete = 0; // Ready for new.
+}
+
+__rx_uart_buf_index_t uart_get_rx_buf_space_left(void){
+  // Return the number of remaining bytes before the buffer is full.
+  // Note that in a ring buffer one location is always "empty", which serves
+  // to indicate the end of buffer. The only way around that is to keep a separate count
+  // in a variable which holds the value of how much space is left in the buffer.
+  // That is both slower and takes up at least as much space.
+  if(__rx_uart_buf_head == __rx_uart_buf_tail) return(RX_UART_BUF_SIZE -1);
+  if( __rx_uart_buf_head > __rx_uart_buf_tail ){
+    return(RX_UART_BUF_SIZE -1 + __rx_uart_buf_tail - __rx_uart_buf_head);
+  }else{
+    return(__rx_uart_buf_tail - __rx_uart_buf_head);
+  }
+}
+
+void debug_echo_char(char c){
+// Useful for debugging. Print printable characters and translate common non printable ones.
+  if( c >=32 && c <=126){
+    uart_putchar(c,NULL);
+  }else{
+    if(c==0)          uart_putchar('0',NULL);
+    else if(c=='\n')  uart_putchar('$',NULL);
+    else if(c=='\r')  uart_putchar('<',NULL);
+    else if(c== 13)   uart_putchar('*',NULL);
+    else              uart_putchar('@',NULL);
+  }
+}
+
+void uart_print_rx_buffer(void){
+  // For debugging, direct print the content of the entire buffer.
+  // This is done through a non buffered output on the UART.
+
+  uart_putchar('\r',NULL);
+  uart_putchar('\n',NULL);
+
+  char *buf= __rx_uart_buf;
+  uint16_t max = RX_UART_BUF_SIZE;
+  
+  for(uint16_t i=0; i< max; ++i ){
+    char c = buf[i];
+    debug_echo_char(c);
+  }
+  uart_putchar('\r',NULL);
+  uart_putchar('\n',NULL);
+  for(uint16_t i=0; i< max; ++i ){
+    if(i== __rx_uart_buf_tail){
+      uart_putchar('+',NULL);
+    }else if(i== __rx_uart_buf_head){
+      uart_putchar('|',NULL);
+    }else{
+      uart_putchar('-',NULL);
+    }
+  }
+  uart_putchar('\r',NULL);
+  uart_putchar('\n',NULL);
+
+}
+
 #endif
-
-// Global flag, telling any code that a complete string was received.
 
 #if UART_ALLOW_BAUD == 1
 void uart_init(unsigned char mode,uint32_t baud){
@@ -83,6 +149,10 @@ void uart_init(unsigned char mode, uint32_t /* baud is discarded */) {
     __uart_io.get = uart_getchar_buffered;
     UCSR0B |= _BV(RXCIE0);                // Receive interrupt enabled.
     __rx_uart_receive_complete=0;  // No, no <CR> received yet.
+#if UART_CTS_ENABLE == 1
+    UART_CTS_DDR  |= _BV(UART_CTS_PIN);
+    UART_CTS_PORT &= ~_BV(UART_CTS_PIN); // Send CTS pin low, ready for input.
+#endif
   }
   __tx_uart_buf_head = 0;
   __tx_uart_buf_tail = 0;
@@ -193,10 +263,19 @@ int uart_getchar_buffered(FILE *stream) {
   if(__rx_uart_buf_tail != __rx_uart_buf_head){ // We did not yet catch up with the head.
     char c=__rx_uart_buf[ __rx_uart_buf_tail ];
     __rx_uart_buf_tail = (__rx_uart_buf_tail + 1) % RX_UART_BUF_SIZE; //next_buffer_loc;
+#if UART_CTS_ENABLE == 1
+    if( uart_get_rx_buf_space_left() > 6){
+      UART_CTS_PORT &= ~_BV(UART_CTS_PIN);  // Send CTS pin low - ready for more input.
+    }
+#endif
+    if(c=='\n' || __rx_uart_buf_tail == __rx_uart_buf_head){ // Now we did catch up with the head.
+        if(__rx_uart_receive_complete>0) __rx_uart_receive_complete--;
+    }
+
     return c;
   }else{ // We caught up with the tail. The buffer is empty, so be ready for next receive.
-    if(__rx_uart_receive_complete>0) __rx_uart_receive_complete--;
-    return 0; // Terminate the string.
+    __rx_uart_receive_complete = 0; // If it is empty, then we cannot have any more <LF>. This is here in case of a miscount.
+    return 0; // EOF
   }
   return -1;
 }
@@ -217,28 +296,59 @@ ISR(USART_UDRE_vect){
 }
 
 ISR(USART_RX_vect){
-  // Receive something interrupt. The UART has an input ready for us.
+    // Receive something interrupt. The UART has an input ready for us.
   char c = UDR0; // Read it right away.
-  __rx_uart_buf_index_t rx_i = (__rx_uart_buf_head + 1) % RX_UART_BUF_SIZE;
+//  debug_echo_char(c);
+
+#if UART_ECHO == 1
+  loop_until_bit_is_set(UCSR0A, UDRE0);
+  UDR0 = c; // Echo it back out right away.
+#endif
+  
+  __rx_uart_buf_index_t rx_i = (__rx_uart_buf_head + 1) % RX_UART_BUF_SIZE; // Next buffer location
+    
+#if UART_CTS_ENABLE == 1
+  if( uart_get_rx_buf_space_left() > 5){              // Need at least 3 spaces.
+#else
   if(rx_i != __rx_uart_buf_tail){                     // Buffer still has space.
-    if( c == 13 /* ^m */ || c == '\n' || c == '\r'){  // End of line
+#endif
+    if( c == '\n' ){  // End of line
       __rx_uart_receive_complete++; // Tell the code that we have something complete.
-      __rx_uart_buf[__rx_uart_buf_head] = 0; // Terminate string with 0, eat the c.
+      __rx_uart_buf[__rx_uart_buf_head] = '\n'; // Keep the return character. This indicates to fgets that string is complete.
+      __rx_uart_buf_head = rx_i;
+    }else if(c == '\r'){ // Do nothing, 'eating' the \r character. If not, it messes up processing.
     }else{
       __rx_uart_buf[__rx_uart_buf_head] = c;
       __rx_uart_buf_head = rx_i;
     }
-#if UART_ECHO == 1
-    loop_until_bit_is_set(UCSR0A, UDRE0);
-    UDR0 = c; // Echo it back out right away.
+    
+  }else{ // Buffer is full
+#if UART_CTS_ENABLE == 1
+    UART_CTS_PORT |= _BV(UART_CTS_PIN);  // Send CTS pin high - no more input please
 #endif
-  }else{ // Buffer is full.
-    // Now what? - we *could* block, or we can throw the input away.
-    // If we throw it away, do we throw the entire buffer?
-    __rx_uart_receive_complete++; // Pretend you got a return, so process the buffer.
-    __rx_uart_buf[__rx_uart_buf_head] = 0;
+        // We need to know if there is code looking to read some from the buffer.
+    if(__rx_uart_receive_complete>0){          // There is, so let it process some input
+#if UART_CTS_ENABLE == 1
+      if(rx_i != __rx_uart_buf_tail){                     // Buffer still has space.
+        __rx_uart_buf[__rx_uart_buf_head] = c;   // Now buffer is almost full. We count on CTS to prevent this being called again.
+        __rx_uart_buf_head = rx_i;
+      }else{
+        __rx_uart_receive_complete++;           // Pretend you got a return, so start processing the buffer.
+        __rx_uart_buf[__rx_uart_buf_head] = 0;  // You loose the last character. LAST COMMAND MAY BE BAD.
+      }
+#else
+      __rx_uart_receive_complete++;           // Pretend you got a return, so start processing the buffer.
+      __rx_uart_buf[__rx_uart_buf_head] = 0;  // You loose the last character. LAST COMMAND MAY BE BAD.
+#endif
+    }else{   // There isn't!! So this is a really long line without a \n = GARBAGE
+      __rx_uart_buf_head = __rx_uart_buf_tail; // RESET head, so buf is empty.
+      __rx_uart_receive_complete = 0;          // We wiped all the <LF>s in the process.
+#if UART_CTS_ENABLE == 1
+      UART_CTS_PORT &= ~_BV(UART_CTS_PIN);  // Send CTS pin low - ready for more input.
+#endif
+    }
   }
 }
-  
+    
 #endif // UART_USE_BUFFERS
 

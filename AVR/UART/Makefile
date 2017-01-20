@@ -38,8 +38,11 @@ SOURCES= main.cpp uart.cpp my_fputs.cpp
 # -Wl,-u,vfscanf -lscanf_min        # Minimalist scanf version
 # -Wl,-u,vfscanf -lscanf_flt        # Floating point scanf version
 
-LIBS =  -lc
+LIBS =  -lc 
 #
 # Include all the common rules for AVR.
 #
+OTHER_DEFINES= -DUART_CTS_ENABLE=1 -DUART_USE_BUFFERS=1 -DTX_UART_BUF_SIZE=512 -DRX_UART_BUF_SIZE=64 
+
+
 include ../Makefile_common.mk
