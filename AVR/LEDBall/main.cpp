@@ -70,8 +70,14 @@ int main(void) {
   sei();
   uart_init(0x3,BAUD);
   timer1_init();
+
+#if UART_CTS_ENABLE == 1
+  UART_CTS_PORT |= _BV(UART_CTS_PIN); // Send CTS pin high
+#endif
   
-  fputs_P(PSTR("\n\rLEDBall Code V0.3.4\r\n"),stdout);
+
+  
+  fputs_P(PSTR("\n\rLEDBall Code V0.4.0\r\n"),stdout);
   flush();
 
   LEDBall leds(L_PIN1, &L_PORT1, NEO_GRB + NEO_KHZ800);
@@ -118,6 +124,11 @@ int main(void) {
   
   PORTD ^= _BV(7); // Toggle the LED on Pin 13
 
+#if UART_CTS_ENABLE == 1
+  UART_CTS_PORT &= ~_BV(UART_CTS_PIN); // Send CTS pin low
+#endif
+
+  
   while (1) {
     //    leds.copy_to_store();
     //    leds.copy_from_store();
@@ -126,7 +137,8 @@ int main(void) {
 //      fgets(strr,64,stdin);
 //      c = strr[0];
       c= fgetc(stdin);
-      putc(c,stdout);
+//      flush();
+//      putc(c,stdout);
       switch( c ){
         uint8_t loc,x,y,r,g,b;
 //        uint32_t tmp_c;
@@ -151,8 +163,11 @@ int main(void) {
         case 'R': // Instant Red
           leds.setShowAll(255,0,0);
           break;
+        case 'S': // status
+          printf_P(PSTR("q: %lu \r\n"),&ch_delay);
+          printf_P(PSTR("r: %lu \r\n"),&rot_delay);
         case 'T':
-          printf_P(PSTR("3: %6lu.%06lu s \r\n"),time_s,(16UL*TCNT1));
+          printf_P(PSTR("T: %6lu.%06lu s \r\n"),time_s,(16UL*TCNT1));
           break;
         case 'W': // Instant Warm White
           leds.setShowAll(255,110,30);
@@ -190,12 +205,10 @@ int main(void) {
         case 'q':
           scanf("%lu",&ch_delay);
           ch_delay_time = gettime_ms();
-          printf_P(PSTR("\r\nCh= %lu\r\n"),ch_delay);
           break;
         case 'r':
           scanf("%lu",&rot_delay);
           rot_delay_time = gettime_ms();
-          printf_P(PSTR("\r\nRot = %lu\r\n"),rot_delay);
           break;
         case 's':
           leds.show();
@@ -204,8 +217,6 @@ int main(void) {
           uint16_t t;
           scanf("%u",&t);
           leds.Temp_to_RGB(t,&r,&g,&b);
-          printf("T= %u, rgb=[%3d,%3d,%3d] \r\n",t,r,g,b);
-          flush();
           leds.setBaseColor(r,g,b);
           break;
         case 'w': // Set base color to warm white
@@ -221,7 +232,7 @@ int main(void) {
           break;
         case 'x':  // Set indiviual pixel at x,y in main array
           scanf("%hhu %hhu %hhu %hhu %hhu",&x,&y,&r,&g,&b);
-          printf("x %hhu %hhu %hhu %hhu %hhu",x,y,r,g,b);
+          // printf("x %hhu %hhu %hhu %hhu %hhu",x,y,r,g,b);
           leds.setPixelColorXY(x,y,r,g,b);
           break;
         case 'y':  // Set indiviual pixel at x,y in alt array

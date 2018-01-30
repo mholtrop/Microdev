@@ -312,11 +312,13 @@ ISR(USART_RX_vect){
 #else
   if(rx_i != __rx_uart_buf_tail){                     // Buffer still has space.
 #endif
-    if( c == '\n' ){  // End of line
+    if( c == UART_EOL ){  // End of line
+//      PORTB ^= _BV(1);
       __rx_uart_receive_complete++; // Tell the code that we have something complete.
-      __rx_uart_buf[__rx_uart_buf_head] = '\n'; // Keep the return character. This indicates to fgets that string is complete.
+      __rx_uart_buf[__rx_uart_buf_head] = '\n'; // Give return character. This indicates to fgets that string is complete.
       __rx_uart_buf_head = rx_i;
-    }else if(c == '\r'){ // Do nothing, 'eating' the \r character. If not, it messes up processing.
+    }else if(c == UART_EAT_CHAR){ // Do nothing, 'eating' the character. If not, it could mess up processing.
+//            PORTB ^= _BV(2);
     }else{
       __rx_uart_buf[__rx_uart_buf_head] = c;
       __rx_uart_buf_head = rx_i;

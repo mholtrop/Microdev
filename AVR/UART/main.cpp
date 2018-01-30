@@ -25,6 +25,16 @@ int main(void) {
   sei();                    // Enable all interrupts.
   uart_init(0x3,BAUD);
   
+//  DDRB  |= _BV(1);
+//  PORTB |= _BV(1);
+//
+//  DDRB  |= _BV(2);
+//  PORTB |= _BV(2);
+//  _delay_ms(500);
+//  PORTB &= ~_BV(1);
+//  PORTB &= ~_BV(2);
+  
+  
   UART_CTS_PORT |= _BV(UART_CTS_PIN);
   fputs_P(PSTR("\r\nUART test code\r\n"),stdout);
   flush();
@@ -42,11 +52,11 @@ int main(void) {
   int count=0;
   
   while(1) {
-    //    __builtin_avr_delay_cycles(0);
 
     if(uart_receive_complete()){
+ 
       count++;
-//      uart_print_rx_buffer();
+
       fgets(strr,64,stdin);
 //      uart_print_rx_buffer();
 //      int jj;
@@ -69,6 +79,8 @@ int main(void) {
       
       printf("i:%3d urc=%1u [%s]\r\n",count,__rx_uart_receive_complete,strr );
 
+
+      
       //        fwrite("[",1,1,stdout);
 //        fwrite(strr,1,strlen(strr),stdout);
 //        fwrite("]\r\n",1,1,stdout);

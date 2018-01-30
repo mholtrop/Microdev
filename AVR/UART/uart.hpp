@@ -102,6 +102,8 @@
 #define UART_CTS_PORT  PORTD
 #define UART_CTS_PIN   2           // PD2 = pin 4 used for hardware handshake.
 
+#define UART_EAT_CHAR  '\n'           // Character that should not be processed at all.
+#define UART_EOL       '\r'        // End Of Line character. \r or BBB
 
 #if UART_USE_BUFFERS == 1
 //
