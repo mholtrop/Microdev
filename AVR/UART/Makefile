@@ -27,7 +27,8 @@ PROGNAME=UART_Test
 # Use .c              suffix for C   files.
 # Use .S  (NOT .s !!!) for assembly source code files.
 
-SOURCES= main.cpp uart.cpp my_fputs.cpp
+SOURCES= main.cpp uart.cpp 
+# my_fputs.cpp
 
 #
 # Set a simpler LIB - NON Ardiuno
@@ -43,6 +44,7 @@ LIBS =  -lc
 # Include all the common rules for AVR.
 #
 OTHER_DEFINES= -DUART_CTS_ENABLE=1 -DUART_USE_BUFFERS=1 -DTX_UART_BUF_SIZE=512 -DRX_UART_BUF_SIZE=64 
+#OTHER_DEFINES= -DUART_USE_BUFFERS=1 -DTX_UART_BUF_SIZE=512 -DRX_UART_BUF_SIZE=64 
 
 
 include ../Makefile_common.mk

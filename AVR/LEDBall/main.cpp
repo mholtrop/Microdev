@@ -141,6 +141,9 @@ int main(void) {
           break;
         case 'O': // Instant off
           leds.setShowAll(0,0,0);
+	  leds.clear();
+	  ch_delay=0;
+	  rot_delay=0;
           break;
         case 'P': // Instant Purple
           leds.setShowAll(255,0,255);
