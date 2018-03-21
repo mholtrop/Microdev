@@ -38,6 +38,8 @@ int main(void) {
   UART_CTS_PORT |= _BV(UART_CTS_PIN);
   fputs_P(PSTR("\r\nUART test code\r\n"),stdout);
   flush();
+  _delay_ms(4000);
+  fputs_P(PSTR("\r\nstart\r\n"),stdout);
   UART_CTS_PORT &= ~_BV(UART_CTS_PIN);
   uart_tx_buffer_flush();
 //  fputs("This is a really long sentence that will still fit in buffer\r\n",stdout);
