@@ -88,7 +88,8 @@ class SSD1331:
         if type(c) is int:
             self._spi.writebytes([c])
         else:
-            self._spi.writebytes(c)
+            for i in range(len(c)//4096):     # Break the array into 4096 bytes max.
+                self._spi.writebytes(c[i*4096:(i+1)*4096])
 
     def Reset(self):
         '''Reset the chip'''
@@ -104,17 +105,20 @@ class SSD1331:
 
         self.Reset()
         # Initialization Sequence
-        self.WriteCommand(self._CMD_DISPLAYOFF) # 0xAE
-        self.WriteCommand(self._CMD_SETREMAP)   # 0xA0
+        commands=[
+            self._CMD_DISPLAYOFF, # 0xAE
+            self._CMD_SETREMAP  , # 0xA0
+            0x72,   # Bit0 = 0 = Horizontal address increment.
+                    # Bit1 = 1 = RAM column 0 - 95 maps to Pin Seg 95-0
+                    # Bit2 = 0 = RGB order.
+                    # Bit3 = 0 = Disable left-right swapping on COM
+                    # Bit4 = 1 = Scan from COM[N-1] to COM0
+                    # Bit5 = 1 = Enable COM split IDD Even
+                    # Bit7,6 = 0,1 = 65k color format.
+        ]
+        self.WriteCommand(commands)
         # RGB data order
         self.WriteCommand(0x72)
-        # Bit0 = 0 = Horizontal address increment.
-        # Bit1 = 1 = RAM column 0 - 95 maps to Pin Seg 95-0
-        # Bit2 = 0 = RGB order.
-        # Bit3 = 0 = Disable left-right swapping on COM
-        # Bit4 = 1 = Scan from COM[N-1] to COM0
-        # Bit5 = 1 = Enable COM split IDD Even
-        # Bit7,6 = 0,1 = 65k color format.
         self.WriteCommand(self._CMD_STARTLINE) 	# 0xA1
         self.WriteCommand(0x0)
         self.WriteCommand(self._CMD_DISPLAYOFFSET) 	# 0xA2
@@ -151,23 +155,26 @@ class SSD1331:
         self.WriteCommand(self._CMD_DISPLAYON)	#--turn on oled panel
 
 
-    def GoTo(self,x,y):
-        '''Move the cursor to x,y'''
-        if x >= self._WIDTH or y >= self._HEIGHT:
+    def GoTo(self,xy0,xy1=None):
+        '''Move the cursor to xy0=[x,y] with end of writing at xy1'''
+        if xy1 is None:
+            xy1=[self._WIDTH-1,self._HEIGHT-1]
+
+        if xy0[0] >= self._WIDTH or xy0[1] >= self._HEIGHT:
             return
 
         # set x and y coordinate
         self.WriteCommand(self._CMD_SETCOLUMN);
-        self.WriteCommand(x);
-        self.WriteCommand(self._WIDTH-1);
+        self.WriteCommand(xy0[0]);
+        self.WriteCommand(xy1[0]);
 
         self.WriteCommand(self._CMD_SETROW);
-        self.WriteCommand(y);
-        self.WriteCommand(self._HEIGHT-1);
+        self.WriteCommand(xy0[1]);
+        self.WriteCommand(xy1[1]);
 
-    def DrawPixel(self,x,y,color):
-        '''Color Pixel at x,y '''
-        self.GoTo(x, y);
+    def DrawPixel(self,xy,color):
+        '''Color Pixel at xy=[x,y] with color'''
+        self.GoTo(xy[0], xy[1]);
         self.WriteData([color >> 8,color&0x0F]);
 
     def DrawLine(self,xy0,xy1,color):
@@ -176,13 +183,7 @@ class SSD1331:
             return(-1)
         if xy1[0]<0 or xy1[0]>self._WIDTH or xy1[1]<0 or xy1[1]>self._HEIGHT:
             return(-2)
-        self.WriteCommand(self._CMD_DRAWLINE)
-        self.WriteCommand(xy0[0])
-        self.WriteCommand(xy0[1])
-        self.WriteCommand(xy1[0])
-        self.WriteCommand(xy1[1])
-        # time.sleep(0.001)
-        self.SendColorCBA(color)
+        self.WriteCommand([self._CMD_DRAWLINE]+xy0+xy1+[color])
 
     def DrawBox(self,xy0,xy1,color,fill):
         '''Draw a Box with corners xy0 ([x,y]) to xy1 in color with fill color.
@@ -196,32 +197,51 @@ class SSD1331:
             self.WriteCommand(0)
         else:
             self.WriteCommand(1)
-        self.WriteCommand(self._CMD_DRAWRECT)
-        self.WriteCommand(xy0[0])
-        self.WriteCommand(xy0[1])
-        self.WriteCommand(xy1[0])
-        self.WriteCommand(xy1[1])
-        # time.sleep(0.001)
-        self.SendColorCBA(color)
-        self.SendColorCBA(fill)
+        self.WriteCommand([self._CMD_DRAWRECT]+xy0+xy1+self.MakeColorCBA(color)+self.MakeColorCBA(fill))
 
+    def DrawImage(self,image,xy0=None,xy1=None):
+        '''Draw the image at xy. Usually xy=[0,0] (default
+        :param image: The image to render
+        :type image: PIL.Image.Image '''
+        if xy0 is None:
+            xy0=[0,0]
+        if xy1 is None:
+            xy1=[self._WIDTH-1,self._HEIGHT-1]
 
+        buf = [0]*(xy1[0]-xy0[0]+1)*(xy1[1]-xy0[1]+1)*2
+        i=0
+        for pixel in image.getdata():
+            buf[i]   = (pixel[0] & 0xF8) | (pixel[1] >> 5)
+            buf[i+1] = (pixel[1] << 5 )  | (pixel[2] >> 3 )
+            i += 2
+        self.GoTo(xy0,xy1)
+        self.WriteData(buf)
 
-    def MakeColor(self,C):
+    def MakeColor(self,R,G=None,B=None):
         '''Create a 16-bit color from [R,G,B] intput'''
-        color= ((C[0]&0x1F)<<11) | ((C[1]&0x3F)<<5) |(C[2]&0x1F)
+        if type(R) is tuple or type(R) is list:
+            C=R
+        else:
+            C=[R,G,B]
+        color= ((C[0]&0xF8)<<8) | ((C[1]&0xFC)<<3) | ((C[2]&0xF8)>>3)
         return(color)
 
     def Make2Color(self,C):
         '''Create a 2 byte color '''
-        color= ((C[0]&0x1F)<<11) | ((C[1]&0x3F)<<5) |(C[2]&0x1F)
+        color= self.MakeColor(C)
         return([color>>8,color&0xFF])
 
-    def SendColorCBA(self,color):
+    def MakeColorCBA(self,color):
         '''Internally used to decode color to CBA and send out.'''
-        C = color>>11 & 0x1F
-        B = color>>5  & 0x3F
-        A = color     & 0x1F
-        self.WriteCommand(C)
-        self.WriteCommand(B)
-        self.WriteCommand(A)
+        if color is None:
+            return([0,0,0])
+
+        if type(color) is tuple or type(color) is list:
+            C = color[0]>>3
+            B = color[1]>>2
+            A = color[2]>>3
+        else: # Color is 16-bit 565 format
+            C = color>>11 & 0x1F
+            B = color>>5  & 0x3F
+            A = color     & 0x1F
+        return([C,B,A])
