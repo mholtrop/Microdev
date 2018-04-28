@@ -7,7 +7,7 @@
 #
 # Author: Maurik Holtrop
 #
-import RPi.GPIO as GPIO
+import Adafruit_BBIO as GPIO
 from spidev import SpiDev
 import time
 
