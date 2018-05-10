@@ -184,10 +184,10 @@ int main(void) {
           scanf("%hhu %hhu %hhu",&r,&g,&b);
           leds.setBaseColor(r,g,b);
           break;
-        case 'c':
+        case 'c': // Clear all LEDS in array.
           leds.clear();
           break;
-        case 'd':
+        case 'd': // DEBUG
           printf("\r\n");
           for(x=0;x<MAX_X;++x) for(y=0;y<MAX_Y;++y){
             printf("(%3hhu,%3hhu) 0x%8lX \r\n",x,y,leds.getPixelColorXY(x,y));
@@ -200,11 +200,11 @@ int main(void) {
 //          leds.linear_chase();
           leds.show();
           break;
-        case 'q':
+        case 'q': // Set the chase update time to argument in ms.
           scanf("%lu",&ch_delay);
           ch_delay_time = gettime_ms();
           break;
-        case 'r':
+        case 'r': // Set the rotate update time to argument in ms.
           scanf("%lu",&rot_delay);
           rot_delay_time = gettime_ms();
           break;
@@ -249,7 +249,7 @@ int main(void) {
       leds.show();
     }
     
-    if(ch_delay>0 && (gettime_ms() - ch_delay_time) > ch_delay ){ // Time to rotate the patern.
+    if(ch_delay>0 && (gettime_ms() - ch_delay_time) > ch_delay ){ // Time to move the patern in linear chase.
       ch_delay_time = gettime_ms();
       leds.linear_chase();
       leds.show();
