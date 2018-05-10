@@ -68,14 +68,12 @@ int main(void) {
   DDRB |= _BV(1);
   
   sei();
-  uart_init(0x3,BAUD);
+  uart_init(0x3,BAUD); // BAUD comes from Makefile_specs.mk, usually set to 57600
   timer1_init();
 
 #if UART_CTS_ENABLE == 1
   UART_CTS_PORT |= _BV(UART_CTS_PIN); // Send CTS pin high
 #endif
-  
-
   
   fputs_P(PSTR("\n\rLEDBall Code V0.4.0\r\n"),stdout);
   flush();

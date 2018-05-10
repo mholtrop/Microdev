@@ -29,6 +29,7 @@ SOURCES=main.cpp uart.cpp NeoPixel.cpp LEDBall.cpp
 # Simplify the libraries. No Arduino stuff. Minimal printf
 #LIBS = -Wl,-u,vfprintf -lprintf_min -lc
 LIBS = -Wl,-u,vfprintf -lprintf_flt -lm -lc
-OTHER_DEFINES= -DMAX_X=4 -DMAX_Y=8 -DSTANDARD=2 -DUART_CTS_ENABLE=1 -DUART_USE_BUFFERS=1 
+# Definitions for the large LEDBall in basement:
+OTHER_DEFINES= -DMAX_X=8 -DMAX_Y=32 -DSTANDARD=0 -DUART_CTS_ENABLE=1 -DUART_USE_BUFFERS=1
 
 include ../Makefile_common.mk
