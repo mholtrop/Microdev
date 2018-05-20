@@ -46,11 +46,11 @@ class BME280:
     _DEV_READ_ADDRESS = 0xF7
     _DEV_READ_LEN=8
 
-    def __init__(self,address=0x76):
+    def __init__(self,address=0x76,bus=2):
         '''Initialize the class. The only argument is the I2C address, which is either 0x76 (SDO pin low)
         or 0x77 (SDO pin high)'''
 
-        self._dev = smbus.SMBus(1)
+        self._dev = smbus.SMBus(bus)
         self._dev_address = address
         # Get the device ID from the device.
         self._dev_id =self._dev.read_byte_data(self._dev_address,self._DEVICE_ID)
