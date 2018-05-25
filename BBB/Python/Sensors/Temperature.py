@@ -133,10 +133,10 @@ def main(argv=None):
     while True:
         (t1,p1,h1)=bme1.Read_Data()
         (t2,p2,h2)=bme2.Read_Data()
-        if abs(p1 - p1_save)>1000:     # Large pressure change (drop). Probably a power fail so reconfigure.
+        if abs(p1 - p1_save)>200:     # Large pressure change (drop). Probably a power fail so reconfigure.
             bme1.Configure()
             continue
-        if abs(p2 - p2_save)>1000:
+        if abs(p2 - p2_save)>200:
             bme2.Configure()
             continue
 
