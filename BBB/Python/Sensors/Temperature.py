@@ -18,12 +18,13 @@ DEBUG=0
 
 try:
     from DevLib import BME280
-except ImportError:
+except ImportError as e:
     sys.path.append('/home/maurik/Microdev/BBB/Python')
     try:
         from DevLib import BME280
     except ImportError:
         print("Please add DevLib to the PYTHONPATH")
+        print(e)
         sys.exit()
 
 def TestPrint(t1,p1,h1,t2,p2,h2):
@@ -110,15 +111,27 @@ def main(argv=None):
     args = parser.parse_args(argv[1:])
     DEBUG = args.debug
 
+    try:
+        database= MySQLdb.connect(DB_HOST,DB_USER,DB_PASSW,DATABASE,DB_PORT)
+        curs    = database.cursor()
+
+        if args.create:
+            MakeSQLTable(curs,"basement_tph","Indoor BME280 at 0x76, below LEDBall lamp.")
+            MakeSQLTable(curs,"outdoor_tph","Outdoor BME280 at 0x76, in front of house.")
+            database.commit()
+    except Exception as e:
+        print("Issue with databse.")
+        print(e)
+        sys.exit()
+
+
     bme1 = BME280(0x76,1)
     bme2 = BME280(0x77,1)
     bme1.Configure()
     bme2.Configure()
-    bme1.Set_Oversampling((16,16,16))
-    bme2.Set_Oversampling((16,16,16))
-
-    database= MySQLdb.connect(DB_HOST,DB_USER,DB_PASSW,DATABASE,DB_PORT)
-    curs    = database.cursor()
+    Oversample_settings = (16,16,16)
+    bme1.Set_Oversampling(Oversample_settings)
+    bme2.Set_Oversampling(Oversample_settings)
 
     if args.create:
         MakeSQLTable(curs,"basement_tph","Indoor BME280 at 0x76, below LEDBall lamp.")
@@ -129,26 +142,43 @@ def main(argv=None):
     (t2,p2,h2)=bme2.Read_Data()
     p1_save=p1
     p2_save=p2
-    
+
     while True:
-        (t1,p1,h1)=bme1.Read_Data()
-        (t2,p2,h2)=bme2.Read_Data()
-        if abs(p1 - p1_save)>200:     # Large pressure change (drop). Probably a power fail so reconfigure.
-            bme1.Configure()
-            continue
-        if abs(p2 - p2_save)>200:
-            bme2.Configure()
-            continue
+        try:
+            database= MySQLdb.connect(DB_HOST,DB_USER,DB_PASSW,DATABASE,DB_PORT)
+            curs    = database.cursor()
+            if Oversample_settings != bme1.Get_Oversampling():  # Power glitch? Reconfigure
+                bme1.Configure()
+                bme1.Set_Oversampling(Oversample_settings)
+            if Oversample_settings != bme2.Get_Oversampling():  # Power glitch? Reconfigure
+                bme2.Configure()
+                bme2.Set_Oversampling(Oversample_settings)
 
-        p1_save=p1
-        p2_save=p2
-        if DEBUG>1:  TestPrint(t1,p1,h1,t2,p2,h2)
-        Insert_into_tph_table(curs,"basement_tph",t1,p1,h1)
-        Insert_into_tph_table(curs,"outdoor_tph",t2,p2,h2)
-        database.commit()
-        time.sleep(args.interval)
+            (t1,p1,h1)=bme1.Read_Data()
+            (t2,p2,h2)=bme2.Read_Data()
 
-    database.close()
+            if abs(p1 - p1_save)>200:     # Large pressure change (drop). Probably a power fail so reconfigure.
+                bme1.Configure()
+                bme1.Set_Oversampling(Oversample_settings)
+                continue
+            if abs(p2 - p2_save)>200:
+                bme2.Configure()
+                bme2.Set_Oversampling(Oversample_settings)
+                continue
+
+            p1_save=p1
+            p2_save=p2
+
+            if DEBUG>1:  TestPrint(t1,p1,h1,t2,p2,h2
+
+            Insert_into_tph_table(curs,"basement_tph",t1,p1,h1)
+            Insert_into_tph_table(curs,"outdoor_tph",t2,p2,h2)
+            database.commit()
+            database.close()
+            time.sleep(args.interval)
+        except Exception as e:
+            print("Error occurred in main while loop.")
+            print(e)
 
 if __name__ == '__main__':
     main()
