@@ -36,12 +36,12 @@ parser.add_argument('-p','--port',type=int,help='port for http, default 8050',de
 args = parser.parse_args(sys.argv[1:])
 
 #     Col name   Title   Color  Store  y-axis
-data_sets=[("temp"    ,"Outdoor Temp","#3090D0","outdoor_tph",'y1'),
-        ("temp"    ,"Indoor Temp","#3090FF","basement_tph" ,'y1'),
-        ("pressure","Outdoor Press","#9030D0","outdoor_tph",'y2'),
-        ("pressure","Indoor Press","#9030FF","basement_tph",'y2'),
-        ("humidity","Outdoor Humidity","#30D090","outdoor_tph",'y3'),
-        ("humidity","Indoor Humidity","#30FF90","basement_tph",'y3')]
+data_sets=[("temp"    ,"Out Temp","#3090D0","outdoor_tph",'y1'),
+        ("temp"    ,"In Temp","#3090FF","basement_tph" ,'y1'),
+        ("pressure","Out Press","#9030D0","outdoor_tph",'y2'),
+        ("pressure","In Press","#9030FF","basement_tph",'y2'),
+        ("humidity","Out Humi","#30D090","outdoor_tph",'y3'),
+        ("humidity","In Humi","#30FF90","basement_tph",'y3')]
 
 cols =  ['time', 'temp', 'pressure', 'humidity']   # Do this by hand to the order is what you expect.
 data_store = {}
@@ -77,7 +77,7 @@ value_box_style=[]
 text_box_style=[]
 for i in range(len(data_sets)):
     value_box_style.append({'float':'left','width':'100px','height':'35px','text-align':'center','line-height':'35px','font-size':'24px','background':data_sets[i][2]})
-    text_box_style.append({'float':'left','width':'120px','height':'35px','text-align':'left','line-height':'35px','font-size':'14px','color':data_sets[i][2]})
+    text_box_style.append({'float':'left','width':'70px','height':'35px','text-align':'left','line-height':'35px','font-size':'14px','color':data_sets[i][2]})
 
 app = dash.Dash(__name__)
 app.layout = html.Div([
@@ -94,8 +94,8 @@ app.layout = html.Div([
                     options=[{'label': 'Auto Update Plots ', 'value': 'AUP'},{'label': 'Values from DB ', 'value': 'DB'}],
                     values=['AUP','DB'], labelStyle={'display': 'inline-block'}),
                     style={'height':'30px','width':'300px','float':'left'}),
-        html.Div(["Graph Update Freq:",dcc.Input(id="Graph_update_value",type="number",value=args.interval,style={'width':'100px'})],style={'float':'left','width':'240px','height':'30px'}),
-        html.Div(["Data Update Freq:",dcc.Input(id="Data_update_value",type="number",value=100,style={'width':'80px'})],style={'height':'30px'})
+        html.Div(["Graph F:",dcc.Input(id="Graph_update_value",type="number",value=args.interval,style={'width':'100px'})],style={'float':'left','width':'240px','height':'30px'}),
+        html.Div(["Data F:",dcc.Input(id="Data_update_value",type="number",value=100,style={'width':'80px'})],style={'height':'30px'})
         ]),
     html.Div([
         html.Div(id="Temp1",children="temp1",style=value_box_style[0]),
@@ -112,7 +112,7 @@ app.layout = html.Div([
         html.Div(id="Hum2tag",children=[data_sets[5][1]],style=text_box_style[5]),
         "."
         ],
-    style={'height':'38px'}),
+    style={'height':'72px'}),
     dcc.Graph(id='Temps'),
     dcc.Interval(id='graph-update-timer', interval=args.interval*1000, n_intervals=0),
     dcc.Interval(id='data-update-timer', interval=args.interval*10000, n_intervals=0),
