@@ -73,6 +73,12 @@ if not args.mock:
     except:
         print("Could not allocate the sensors.")
 
+value_box_style=[]
+text_box_style=[]
+for i in range(len(data_sets)):
+    value_box_style.append({'float':'left','width':'100px','height':'35px','text-align':'center','line-height':'35px','font-size':'24px','background':data_sets[i][2]})
+    text_box_style.append({'float':'left','width':'120px','height':'35px','text-align':'left','line-height':'35px','font-size':'14px','color':data_sets[i][2]})
+
 app = dash.Dash(__name__)
 app.layout = html.Div([
         html.Div([
@@ -91,6 +97,22 @@ app.layout = html.Div([
         html.Div(["Graph Update Freq:",dcc.Input(id="Graph_update_value",type="number",value=args.interval,style={'width':'100px'})],style={'float':'left','width':'240px','height':'30px'}),
         html.Div(["Data Update Freq:",dcc.Input(id="Data_update_value",type="number",value=100,style={'width':'80px'})],style={'height':'30px'})
         ]),
+    html.Div([
+        html.Div(id="Temp1",children="temp1",style=value_box_style[0]),
+        html.Div(id="Temp1tag",children=[data_sets[0][1]],style=text_box_style[0]),
+        html.Div(id="Temp2",children="temp2",style=value_box_style[1]),
+        html.Div(id="Temp2tag",children=[data_sets[1][1]],style=text_box_style[1]),
+        html.Div(id="Press1",children="press1",style=value_box_style[2]),
+        html.Div(id="Press1tag",children=[data_sets[2][1]],style=text_box_style[2]),
+        html.Div(id="Press2",children="pres2",style=value_box_style[3]),
+        html.Div(id="Press2tag",children=[data_sets[3][1]],style=text_box_style[3]),
+        html.Div(id="Hum1",children="hum1",style=value_box_style[4]),
+        html.Div(id="Hum1tag",children=[data_sets[4][1]],style=text_box_style[4]),
+        html.Div(id="Hum2",children="hum2",style=value_box_style[5]),
+        html.Div(id="Hum2tag",children=[data_sets[5][1]],style=text_box_style[5]),
+        "."
+        ],
+    style={'height':'38px'}),
     dcc.Graph(id='Temps'),
     dcc.Interval(id='graph-update-timer', interval=args.interval*1000, n_intervals=0),
     dcc.Interval(id='data-update-timer', interval=args.interval*10000, n_intervals=0),
@@ -145,6 +167,43 @@ env_layout = go.Layout(
         #anchor='free',
         # overlaying='y'
         )
+
+@app.callback(Output('Temp1','children'),[Input('data-update-timer','n_intervals'),Input('checklist-choice','values'),Input('buffer_depth_set_value','n_clicks')])
+def update_value1(n_int,check_val,n_clicks):
+    '''Update the text box values'''
+    idxmax=data_store['outdoor_tph']['time'].idxmax()
+    return("{:5.2f}".format(data_store['outdoor_tph']['temp'][idxmax]))
+
+@app.callback(Output('Temp2','children'),[Input('data-update-timer','n_intervals'),Input('checklist-choice','values'),Input('buffer_depth_set_value','n_clicks')])
+def update_value2(n_int,check_val,n_clicks):
+    '''Update the text box values'''
+    idxmax=data_store['basement_tph']['time'].idxmax()
+    return("{:5.2f}".format(data_store['basement_tph']['temp'][idxmax]))
+
+@app.callback(Output('Press1','children'),[Input('data-update-timer','n_intervals'),Input('checklist-choice','values'),Input('buffer_depth_set_value','n_clicks')])
+def update_value3(n_int,check_val,n_clicks):
+    '''Update the text box values'''
+    idxmax=data_store['outdoor_tph']['time'].idxmax()
+    return("{:6.1f}".format(data_store['outdoor_tph']['pressure'][idxmax]))
+
+@app.callback(Output('Press2','children'),[Input('data-update-timer','n_intervals'),Input('checklist-choice','values'),Input('buffer_depth_set_value','n_clicks')])
+def update_value4(n_int,check_val,n_clicks):
+    '''Update the text box values'''
+    idxmax=data_store['basement_tph']['time'].idxmax()
+    return("{:6.1f}".format(data_store['basement_tph']['pressure'][idxmax]))
+
+@app.callback(Output('Hum1','children'),[Input('data-update-timer','n_intervals'),Input('checklist-choice','values'),Input('buffer_depth_set_value','n_clicks')])
+def update_value5(n_int,check_val,n_clicks):
+    '''Update the text box values'''
+    idxmax=data_store['outdoor_tph']['time'].idxmax()
+    return("{:5.2f}".format(data_store['outdoor_tph']['humidity'][idxmax]))
+
+@app.callback(Output('Hum2','children'),[Input('data-update-timer','n_intervals'),Input('checklist-choice','values'),Input('buffer_depth_set_value','n_clicks')])
+def update_value6(n_int,check_val,n_clicks):
+    '''Update the text box values'''
+    idxmax=data_store['basement_tph']['time'].idxmax()
+    return("{:5.2f}".format(data_store['basement_tph']['humidity'][idxmax]))
+
 
 @app.callback(Output('Buff_value','value'),[Input('Buff_slider','value')])
 def update_textarea(value):
