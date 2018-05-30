@@ -198,7 +198,7 @@ def update_data(interval,checklist_choice,n_clicks,buffer_depth):
 
 
     if 'DB' in checklist_choice:
-        print("Put data in data_store from DB")
+        if args.debug>0: print("Put data in data_store from DB")
 #        try:
         if True:
             database= MySQLdb.connect(DB_HOST,DB_USER,DB_PASSW,DATABASE,DB_PORT)
@@ -280,7 +280,7 @@ def update_data(interval,checklist_choice,n_clicks,buffer_depth):
 def update_graph(interval,checklist_choice,buffer_depth,buffer_depth_value):
     # select * from outdoor_tph as o, basement_tph as b where abs(cast(o.time as signed) -cast(b.time as signed))< 100 and  o.time > date_sub(now(),INTERVAL 6 HOUR)'
 
-    print("Update graph.")
+    if args.debug>0:print("Update graph.")
 
     db_dat=[]
     for s in data_sets:
