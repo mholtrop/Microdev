@@ -16,7 +16,14 @@
 # do not have a "Chip-Select-bar" (SSbar) signal.
 #####################################################################
 
-import RPi.GPIO as GPIO  # Setup the GPIO for RPi
+try:
+    import RPi.GPIO as GPIO
+except:
+    pass
+try:
+    import Adafruit_BBIO as GPIO
+except:
+    pass
 import time
 import sys
 

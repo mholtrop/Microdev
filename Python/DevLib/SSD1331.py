@@ -8,7 +8,14 @@
 # Datasheet:
 import time
 from spidev import SpiDev
-import RPi.GPIO as GPIO
+try:
+    import RPi.GPIO as GPIO
+except:
+    pass
+try:
+    import Adafruit_BBIO as GPIO
+except:
+    pass
 
 class SSD1331:
 
