@@ -7,7 +7,14 @@
 #
 # Author: Maurik Holtrop
 #
-import Adafruit_BBIO as GPIO
+try:
+    import RPi.GPIO as GPIO
+except:
+    pass
+try:
+    import Adafruit_BBIO as GPIO
+except:
+    pass
 from spidev import SpiDev
 import time
 

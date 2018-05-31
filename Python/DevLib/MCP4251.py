@@ -37,9 +37,15 @@
 # To accomodate high speed writing for the MCP41x1 devices, the clock speed is adjusted for These
 # chips when using hardware SPI
 #
-
-
-import RPi.GPIO as GPIO
+try:
+    import RPi.GPIO as GPIO
+except:
+    pass
+try:
+    import Adafruit_BBIO as GPIO
+except:
+    pass
+    
 import spidev
 
 class MCP4251:

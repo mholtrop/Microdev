@@ -47,8 +47,8 @@ class BME280:
     _DEV_READ_LEN=8
 
     def __init__(self,address=0x76,bus=1):
-        '''Initialize the class. The only argument is the I2C address, which is either 0x76 (SDO pin low)
-        or 0x77 (SDO pin high)'''
+        '''Initialize the class. The arguments: I2C address, which is either 0x76 (SDO pin low)
+        or 0x77 (SDO pin high), and bus, which is 1 for RPi and can be 0,1,2 for BeagleBone'''
 
         self._dev = smbus.SMBus(bus)
         self._dev_address = address

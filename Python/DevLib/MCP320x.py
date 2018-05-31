@@ -39,8 +39,15 @@
 # From MCP3208 datasheet:
 # Outging data : MCU latches data to A/D converter on rising edges of SCLK
 # Incoming data: Data is clocked out of A/D converter on falling edges, so should be read on rising edge.
-
-import RPi.GPIO as GPIO
+try:
+    import RPi.GPIO as GPIO
+except:
+    pass
+try:
+    import Adafruit_BBIO as GPIO
+except:
+    pass
+    
 import spidev
 
 class MCP320x:
