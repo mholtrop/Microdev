@@ -1,4 +1,4 @@
-# Phys605 module
+# Python Sensor and Chip Communication Modules.
 ### Author: Maurik Holtrop
 
 These modules are used in the Physics 605 lab at the University of New Hampshire.
@@ -11,6 +11,7 @@ protocol and "spidev" to communicate with the SPI protocol. These libraries can 
 installed with:
     pip install smbus, smbus2, spidev
 
+
 ## Modules:
 
 1. AD9850  - Module for driving the AD9850 based frequency synthesizers.
@@ -22,4 +23,4 @@ installed with:
 1. MCP4251 - Module for driving an MCP4251 Digital Programmable Resistors. Works with MPC4241, MCP4242, MCP4251, MCP4252, MCP4261, MCP4262, MCP4141, MCP4142, MCP4151, MCP4152, MCP4161, MCP4162
 1. SI7021  - Module for reading the SI7021 temperature and humidity sensor.
 1. SN74HC165 - Simple module for reading out the SN74HC165, Parallel In to Serial Out shift register.
-1. SSD1331 - Module to drive an SSD1331 OLED display module. 
+1. SSD1331 - Module to drive an SSD1331 OLED display module.

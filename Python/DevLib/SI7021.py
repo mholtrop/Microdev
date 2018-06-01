@@ -152,7 +152,7 @@ class SI7021:
         """
         # read register and only update heater bits
         val=self._dev.read_byte_data(self._ADDRESS,0x11)
-        v = (val[0] & 0xF0) | (level & 0x0F)
+        v = (val & 0xF0) | (level & 0x0F)
         self._dev.write_byte_data(self._ADDRESS,0x51, v)
 
     def Get_Heater_Level(self):
@@ -171,7 +171,7 @@ class SI7021:
         15: 94.20 mA
         """
         level = self._dev.read_byte_data(self._ADDRESS,0x11) # level
-        return level[0]&0x0F
+        return level&0x0F
 
     def Heater_on(self):
         """
@@ -179,7 +179,7 @@ class SI7021:
         """
         # read register and only update heater bit
         val=self._dev.read_byte_data(self._ADDRESS, 0xE7)
-        v = (val[0] & 0xFB) | 4
+        v = (val & 0xFB) | 4
         self._dev.write_byte_data(self._ADDRESS,0xE6, v)
 
     def Heater_off(self):
@@ -189,7 +189,7 @@ class SI7021:
         # read register and only update heater bit
         # read register and only update heater bit
         val=self._dev.read_byte_data(self._ADDRESS, 0xE7)
-        v = (val[0] & 0xFB)
+        v = (val & 0xFB)
         self._dev.write_byte_data(self._ADDRESS,0xE6, v)
 
     def Firmware_Revision(self):
