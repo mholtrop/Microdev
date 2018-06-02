@@ -19,7 +19,7 @@ DEBUG=0
 try:
     from DevLib import BME280
 except ImportError as e:
-    sys.path.append('/home/maurik/Microdev/BBB/Python')
+    sys.path.append('/home/maurik/Microdev/Python')
     try:
         from DevLib import BME280
     except ImportError:
@@ -169,7 +169,7 @@ def main(argv=None):
             p1_save=p1
             p2_save=p2
 
-            if DEBUG>1:  TestPrint(t1,p1,h1,t2,p2,h2
+            if DEBUG>1:  TestPrint(t1,p1,h1,t2,p2,h2)
 
             Insert_into_tph_table(curs,"basement_tph",t1,p1,h1)
             Insert_into_tph_table(curs,"outdoor_tph",t2,p2,h2)
