@@ -3,6 +3,7 @@
 *.lo
 *.o
 *.obj
+*.pyc
 
 # Ignore the dependency directories.
 depdir
