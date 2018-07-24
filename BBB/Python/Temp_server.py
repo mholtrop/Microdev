@@ -32,13 +32,13 @@ args = parser.parse_args(sys.argv[1:])
 # Col name   Title   Color  Table-name  y-axis
 #
 data_sets=[
-        {'name':"Temp1" ,'title':"Out Temp" ,'table':"outdoor_tph" ,'column':"temp"    ,'graph':'y3','color':"#10FFD0"},
+        {'name':"Temp1" ,'title':"Out Temp" ,'table':"outdoor_tph" ,'column':"temp"    ,'graph':'y1','color':"#10FFD0"},
         {'name':"Hum1"  ,'title':"Out Humi" ,'table':"outdoor_tph" ,'column':"humidity",'graph':'y2','color':"#30D080"},
-        {'name':"Press1",'title':"Out Press",'table':"outdoor_tph" ,'column':"pressure",'graph':'y1','color':"#9030D0"},
-        {'name':"Temp2" ,'title':"In Temp"  ,'table':"basement_tph",'column':"temp"    ,'graph':'y3','color':"#1090FF"},
+        {'name':"Press1",'title':"Out Press",'table':"outdoor_tph" ,'column':"pressure",'graph':'y3','color':"#9030D0"},
+        {'name':"Temp2" ,'title':"In Temp"  ,'table':"basement_tph",'column':"temp"    ,'graph':'y1','color':"#1090FF"},
         {'name':"Hum2"  ,'title':"In Humi"  ,'table':"basement_tph",'column':"humidity",'graph':'y2','color':"#3080D0"},
-        {'name':"Press2",'title':"In Press" ,'table':"basement_tph",'column':"pressure",'graph':'y1','color':"#9030FF"},
-        {'name':"Temp3" ,'title':"CL Temp"  ,'table':"closet_th",   'column':"temp"    ,'graph':'y3','color':"#10FFFF"},
+        {'name':"Press2",'title':"In Press" ,'table':"basement_tph",'column':"pressure",'graph':'y3','color':"#9030FF"},
+        {'name':"Temp3" ,'title':"CL Temp"  ,'table':"closet_th",   'column':"temp"    ,'graph':'y1','color':"#10FFFF"},
         {'name':"Hum3"  ,'title':"CL Humi"  ,'table':"closet_th",   'column':"humidity",'graph':'y2','color':"#20D0D0"}
         ]
 
@@ -109,32 +109,33 @@ env_layout = go.Layout(
     height=800,
     xaxis = xaxis_style,
     yaxis=dict(
-        title='Pressure',
+        title='Temperature',
         titlefont=dict(
             color='#3090D0'),
         tickfont=dict(
             color='#3090D0'),
         side='left',
         autorange=True,
-        domain=[0.,0.33]),
+        domain=[0.67,1.]),
     yaxis2=dict(
         title='Humidity',
         titlefont=dict(
-            color='#9030D0'),
+            color='#30D090'),
         tickfont=dict(
-            color='#9030D0'),
+            color='#30D090'),
         side='left',
         autorange=True,
         domain=[0.34,0.66]),
     yaxis3=dict(
-        title='Temperature',
+        title='Pressure',
         titlefont=dict(
-            color='#30D090'),
+            color='#9030D0'),
         tickfont=dict(
-            color='#30D090'),
+            color='#9030D0'),
         side='left',
         autorange=True,
-        domain=[0.67,1.])
+        domain=[0.,0.33]),
+
         #anchor='free',
         # overlaying='y'
         )
