@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 #
-# MCP320x
+# APA102 Driver
 #
 # Author: Maurik Holtrop
 #
 # This module is a pure Python version to write to the APA102 LEDS.
+#
 #
 # The code borrowed from Martin Erzberger's version: https://github.com/tinue/APA102_Pi/blob/master/apa102.py
 # But is a complete re-implementation.
@@ -40,17 +41,17 @@ class APA102:
 
     def __init__(self,num_leds=1,CS=None,CLK=None,MOSI=None):
         """Inialize the APA102 class.
-        Parameters:
-        num_leds     - integer: the number of leds in the string
-                     - (x,y)  : the number of leds in matrix of x,y dimension
-                       If you set the num_leds as (x,y) you can set pixels as (x,y) as well.
-                       This uses np.matrix to set the LED array, leds.
-        CS           - Dummy - not used by APA102 LEDS, so set to None.
-                       If set to 0 or 1, the HW CS will be used. You can use an NAND gate
-                       and an INVERTER to effectively add a CS line to the APA102 string.
-        CLK          - For HW SPI this is the clock speed.
-                       For Software SPI, this it the PIN with the clock signal.
-        MOSI         - GPIO pin number for data out. Use None for hardware SPI.
+
+        param: num_leds     - integer: the number of leds in the string
+                            - (x,y)  : the number of leds in matrix of x,y dimension
+                              If you set the num_leds as (x,y) you can set pixels as (x,y) as well.
+                              This uses np.matrix to set the LED array, leds.
+        param: CS           - Dummy - not used by APA102 LEDS, so set to None.
+                              If set to 0 or 1, the HW CS will be used. You can use an NAND gate
+                              and an INVERTER to effectively add a CS line to the APA102 string.
+        param: CLK          - For HW SPI this is the clock speed.
+                              For Software SPI, this it the PIN with the clock signal.
+        param: MOSI         - GPIO pin number for data out. Use None for hardware SPI.
         """
 
         if type(num_leds) is int:
@@ -75,10 +76,10 @@ class APA102:
 
     def zero(self):
         """Set all the LEDS to zero, i.e. dark, but do not call show() """
-        if type(self.leds) is list:
+        if isinstance(self.leds,list):
             for led in range(len(self.leds)):
                 self.set_pixel(led, 0, 0)
-        elif type(self.leds) is np.ndarray or type(self.leds) is np.matrix:
+        elif isinstance(self.leds,np.ndarray):
             self.leds.fill(0b11100000<<24)
 
     def clear(self):
@@ -113,9 +114,9 @@ class APA102:
         # LED startframe is three "1" bits, followed by 5 brightness bits
         ledstart = (brightness & 0b00011111) | 0b11100000
 
-        if type(self.leds) is list:
+        if isinstance(self.leds,list):
             self.leds[loc] = (ledstart<<24) + rgb_color
-        elif type(self.leds) is np.ndarray or type(self.leds) is np.matrix:
+        elif isinstance(self.leds,np.ndarray):
             self.leds.itemset(loc,(ledstart<<24) + rgb_color)
 
     def roll(self, positions=1,axis=None):
@@ -124,10 +125,10 @@ class APA102:
         if axis=1 roll in the y shape. If axis is None, roll
         as if linear.
         """
-        if type(self.leds) is list:
+        if isinstance(self.leds,list):
             cutoff = (-positions % len(self.leds))
             self.leds = self.leds[cutoff:] + self.leds[:cutoff]
-        elif type(self.leds) is np.ndarray or type(self.leds) is np.matrix:
+        elif isinstance(self.leds,np.ndarray):
             self.leds = np.roll(self.leds,positions,axis=axis)
 
     def show(self):
@@ -147,9 +148,9 @@ class APA102:
         # In the process we create a copy, which for spidev is good thing.
         # If you run the clock at 8MHz, it takes 6 to 7 ms for show() with 256 LEDs on an RPi3.
         # SPI takes up to 4096 Integers. So we are fine for up to 1024 LEDs.
-        if type(self.leds) is list:
+        if isinstance(self.leds,list):
             self._dev.writebytes([ int(i) for x in self.leds for i in [(x>>24)&0xFF,(x>>16)&0xFF,(x>>8)&0xFF,x&0xFF]])
-        elif type(self.leds) is np.ndarray or type(self.leds) is np.matrix:
+        elif isinstance(self.leds,np.ndarray):
             self._dev.writebytes([ int(i) for x in self.leds.flatten() for i in [(x>>24)&0xFF,(x>>16)&0xFF,(x>>8)&0xFF,x&0xFF]])
         # To ensure that all the data gets to all the LEDS, we need to
         # continue clocking. The easiest way to do so is by sending zeros.

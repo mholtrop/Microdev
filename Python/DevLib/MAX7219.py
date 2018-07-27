@@ -98,27 +98,6 @@ class MAX7219:
         '''Write the 16 bit data to the output using SPI or
          "bit-banged" SPI on the GPIO output line.
         This is a "raw" mode write, used internally in these methods.'''
-        # if self.DATA>0:
-        #     GPIO.output(self.CS_bar,0)
-        #
-        #     for i in range(16):  # send out 16 bits of data sequentially.
-        #         GPIO.output(self.CLK,0)
-        #         #time.sleep(0.00001)
-        #         bit = data & 0x8000
-        #         GPIO.output(self.DATA,bit)
-        #         #time.sleep(0.00001)
-        #         GPIO.output(self.CLK,1)
-        #         #time.sleep(0.00001)
-        #         data <<=1
-        #         if(i==7):
-        #             GPIO.output(self.CLK,0)
-        #             GPIO.output(self.DATA,0)
-        #         #    time.sleep(0.00003)
-        #
-        #     GPIO.output(self.DATA,0)
-        #     GPIO.output(self.CLK,0)
-        #     GPIO.output(self.CS_bar,1)
-        # else:
         self._dev.writebytes([(data>>8)&0xFF,data&0xFF]) # Write the first and second byte from data.
 
     def WriteLocChar(self,loc,dat):
