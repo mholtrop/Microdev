@@ -1,2 +1,2 @@
 # Microdev
-Micro-controller code development area
+Micro-controller, Raspberry Pi and Beagle Bone Black codes development area.

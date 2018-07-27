@@ -15,45 +15,45 @@ try:
     import Adafruit_BBIO as GPIO
 except:
     pass
-from spidev import SpiDev
+
+import spidev
+import BBSpiDev
+
 import time
 
 class MAX7219:
-    def __init__(self,DATA_pin,CLK_pin,CS_bar_pin,mode=1):
+    def __init__(self,CS,CLK,MOSI,mode=1):
         '''This class helps with driving a MAX7219 LED module using either regular
         GPIO pins, or SPI hardware interface.
-        For SPI hardware, set DATA_pin=0, CS_bar_pin=0 or 1, CLK_pin= bus speed (1000000)
-        For GPIO "bit-bang" interface, set DATA_pin = Data in (dat),
-        CS_bar = to Chip Select (cs), and CLK_pin= Clock (clk)
+        For SPI hardware: CS = chip select, CLK= bus speed (1000000), MOSI = None
+        For GPIO "bit-bang" interface:
+           CS_bar = Chip Select pin (cs), CLK= Clock pin (clk), MOSI = Data pin.
+
         A final argument, mode=1 (default) sets number decoding, while
         mode=0 sets raw mode, see the MAX7219 chip data sheet.
         -------
         This code expects the pin numbers in the BSM standard.
         The Raspberry Pi interfacing is done through the RPi.GPIO module
-        or the spi module'''
+        or the spidev module, the BBB with Adafruit_BBIO or spidev module'''
 
-        self.DATA = DATA_pin
-        self.CS_bar = CS_bar_pin
-        self.CLK = CLK_pin
+        self.DATA = MOSI
+        self.CS_bar = CS
+        self.CLK = CLK
         self.Mode = mode
         self._dev = None
 
-        if self.DATA>0:
-            GPIO.setmode(GPIO.BCM)
-            GPIO.setup(self.CLK,GPIO.OUT)
-            GPIO.setup(self.DATA,GPIO.OUT)
-            GPIO.setup(self.CS_bar,GPIO.OUT)
-
-            GPIO.output(self.CLK,0)
-            GPIO.output(self.DATA,0)
-            GPIO.output(self.CS_bar,1)
-        else:
-            if self.CLK < 100:
+        if self.DATA is None:
+            if self.CLK < 1:
                 self.CLK=1000000
-            self._dev = SpiDev(0,self.CS_bar)
-            self._dev.mode =0
-            self._dev.max_speed_hz=self.CLK
-            self._dev.bits_per_word = 8
+            # Initialize the SPI hardware device
+            self._dev = spidev.SpiDev(0,self.CS_bar)
+        else:
+            self._dev = BBSpiDev.BBSpiDev(self.CS_bar,self.CLK,self.DATA,None)
+
+        self._dev.mode =0
+        self._dev.max_speed_hz=self.CLK
+        self._dev.bits_per_word = 8
+
         self.Init(mode)
 
     def Init(self,mode):
@@ -79,12 +79,7 @@ class MAX7219:
     def __del__(self):          # This is automatically called when the class is deleted.
         '''Delete and cleanup.'''
         self.WriteLocChar(0x0C,0x0) # Turn off
-        if self.DATA>0:
-            GPIO.cleanup(self.CLK)
-            GPIO.cleanup(self.DATA)
-            GPIO.cleanup(self.CS_bar)
-        else:
-            self._dev.close()
+        self._dev.close()
 
     def Clear(self):
         '''Clear the display to all blanks. (it looks off) '''
@@ -103,28 +98,28 @@ class MAX7219:
         '''Write the 16 bit data to the output using SPI or
          "bit-banged" SPI on the GPIO output line.
         This is a "raw" mode write, used internally in these methods.'''
-        if self.DATA>0:
-            GPIO.output(self.CS_bar,0)
-
-            for i in range(16):  # send out 16 bits of data sequentially.
-                GPIO.output(self.CLK,0)
-                #time.sleep(0.00001)
-                bit = data & 0x8000
-                GPIO.output(self.DATA,bit)
-                #time.sleep(0.00001)
-                GPIO.output(self.CLK,1)
-                #time.sleep(0.00001)
-                data <<=1
-                if(i==7):
-                    GPIO.output(self.CLK,0)
-                    GPIO.output(self.DATA,0)
-                #    time.sleep(0.00003)
-
-            GPIO.output(self.DATA,0)
-            GPIO.output(self.CLK,0)
-            GPIO.output(self.CS_bar,1)
-        else:
-            self._dev.writebytes([(data>>8)&0xFF,data&0xFF]) # Write the first and second byte from data.
+        # if self.DATA>0:
+        #     GPIO.output(self.CS_bar,0)
+        #
+        #     for i in range(16):  # send out 16 bits of data sequentially.
+        #         GPIO.output(self.CLK,0)
+        #         #time.sleep(0.00001)
+        #         bit = data & 0x8000
+        #         GPIO.output(self.DATA,bit)
+        #         #time.sleep(0.00001)
+        #         GPIO.output(self.CLK,1)
+        #         #time.sleep(0.00001)
+        #         data <<=1
+        #         if(i==7):
+        #             GPIO.output(self.CLK,0)
+        #             GPIO.output(self.DATA,0)
+        #         #    time.sleep(0.00003)
+        #
+        #     GPIO.output(self.DATA,0)
+        #     GPIO.output(self.CLK,0)
+        #     GPIO.output(self.CS_bar,1)
+        # else:
+        self._dev.writebytes([(data>>8)&0xFF,data&0xFF]) # Write the first and second byte from data.
 
     def WriteLocChar(self,loc,dat):
         '''Write dat to loc. If the mode is 1 then dat is a number and loc is the location.
@@ -233,23 +228,34 @@ def main(argv):
     CLK pin    = 5
     CS_bar pin = 6
     '''
-    Max_data   = 4
-    Max_clock  = 5
-    Max_cs_bar = 6
+
+    if len(argv) < 4:
+        Max_data   = 4
+        Max_clock  = 5
+        Max_cs_bar = 6
+        print("Using bit bang mode DIN->{} CLK->{} CS->{} ".format(Max_data,Max_clock,Max_cs_bar))
+    else:
+        if int(argv[1]) == 0:
+            Max_data = None
+        else:
+            Max_data  =int(argv[1])
+        Max_clock =int(argv[2])
+        Max_cs_bar=int(argv[3])
+        print("Using bit bang mode DIN->{} CLK->{} CS->{} ".format(Max_data,Max_clock,Max_cs_bar))
 
 # If you connect your display to the PSI interface, comment the lines above and uncomment the lines below.
 # Max_data = 0        # Use 0 for SPI connection, otherwise use GPIO pin connected to driving
 # Max_clock= 1000000  # Use clock frequency for SPI connection, otherwise use GPIO pin connected to CLK
 # Max_cs_bar = 0      # Use channel (CE0 or CE1) for SPI connection, otherwise use GPIO pin for CS
 
-    M = MAX7219(Max_data,Max_clock,Max_cs_bar)
+    M = MAX7219(CS=Max_cs_bar,CLK=Max_clock,MOSI=Max_data)
     num = 12345678
     M.WriteInt(num)
     time.sleep(1)
     try:
         for i in range(num,0,-1):
             M.WriteInt(i)
-            time.sleep(0.01)
+            # time.sleep(0.01)
     except KeyboardInterrupt:
         print(" Interrupted")
     except Exception as e:
