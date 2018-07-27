@@ -1,8 +1,16 @@
+# BBSpiDev = Bit Bang SPI device.
 #
-# This file is a subset of the Adafruit_GPIO/SPI.py
-# found here: https://raw.githubusercontent.com/adafruit/Adafruit_Python_GPIO/master/Adafruit_GPIO/SPI.py
+# This is a software, pure Python, based SPI interface that uses regular GPIO lines.
+# It is a heavily modified version of the Adafruit_GPIO/SPI.py example. The reasons
+# for modifying are plenty, but mainly to make this Python class a drop-in replacement
+# for the _standard_ spidev implementation, rather than needing to go fully the Adafruit way
+# of dealing with SPI.
 #
-# This file has some minor modifications.
+#
+# This original Adafruit_GPIO/SPI.py is found here:
+# https://raw.githubusercontent.com/adafruit/Adafruit_Python_GPIO/master/Adafruit_GPIO/SPI.py
+#
+##### Copyright notice on the original example:
 #
 # Copyright (c) 2014 Adafruit Industries
 # Author: Tony DiCola
@@ -25,10 +33,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 try:
-    import RPi.GPIO as GPIO
+    import RPi.GPIO as GPIO             # Import the Raspberry Pi version of GPIO
 except:
     try:
-        import Adafruit_BBIO as GPIO
+        import Adafruit_BBIO as GPIO    # If you are using a Beagle Bone.
     except:
         raise RuntimeError("It seems that no GPIO system was found. Please check your installation.")
 
