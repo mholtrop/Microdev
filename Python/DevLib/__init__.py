@@ -9,6 +9,7 @@ from .APA102     import APA102
 from .BBSpiDev   import BBSpiDev
 from .BME280     import BME280
 from .DS3231     import DS3231
+from .DS18B20    import DS18B20
 from .ISL29125   import ISL29125
 from .MAX7219    import MAX7219
 from .MCP320x    import MCP320x
