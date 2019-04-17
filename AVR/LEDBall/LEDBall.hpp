@@ -49,12 +49,14 @@ public:
     if( x>= MAX_X) x=MAX_X-1;      // Check to not go over limit.
     if( y>= MAX_Y) y=MAX_Y-1;
 #if STANDARD == 0
+  #warning Standard 0 code.
     return( x*MAX_Y + y);
 #elif STANDARD == 1   // ODD type, where every odd (1,3,5) strip has a pixel less. UGH
+  #warning Standard 1 code.
     if( x%2 == 1 && y == (MAX_Y-1)) y = MAX_Y -2;
     return( x*MAX_Y + y - ( x/2 ) );
 #elif STANDARD == 2  // Reversing type
-// #warning Standard 2 code.
+  #warning Standard 2 code.
     if( x < MAX_X/2) return( (2*x*MAX_Y) + y);  // Y is normal, x is two times further
     return( 2*(x+1-MAX_X/2)*MAX_Y - y - 1);
 #else 

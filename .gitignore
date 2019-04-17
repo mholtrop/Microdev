@@ -3,16 +3,25 @@
 *.lo
 *.o
 *.obj
+*.pyc
 
 # Ignore the dependency directories.
 depdir
 
+# Ignore any and all tmp directories and files.
+tmp
+*.tmp
+
 # Copied include files
 AVR/include/*.h
 
-# XCode stuff
+# XCode user data
+AVR/AVR2.xcworkspace/xcuserdata
 *.xcodeproj
 build
+
+# Attics
+*/Attic
 
 # Precompiled Headers
 *.gch

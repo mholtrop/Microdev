@@ -10,7 +10,7 @@ import random as ran
 class uart_test:
 
     def __init__(self):
-        self.ser = serial.Serial("/dev/tty.usbserial-AH03FHRY",38400,rtscts=True)
+        self.ser = serial.Serial("/dev/ttyO4",57600,rtscts=True)
         time.sleep(0.1)
         print("Started uart_test")
         self.alive = True
