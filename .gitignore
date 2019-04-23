@@ -13,7 +13,7 @@ tmp
 *.tmp
 
 # Copied include files
-AVR/include/*.h
+# AVR/include/*.h
 
 # XCode user data
 AVR/AVR2.xcworkspace/xcuserdata
