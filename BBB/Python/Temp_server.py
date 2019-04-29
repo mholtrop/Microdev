@@ -5,7 +5,7 @@ import argparse
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output, State, Event
+from dash.dependencies import Input, Output, State
 
 import plotly.graph_objs as go
 
@@ -17,8 +17,8 @@ from random import random
 
 DB_USER ="maurik"
 DB_PASSW= "wakende"
-DB_HOST="127.0.0.1"
-# DB_HOST="10.0.0.135"
+# DB_HOST="127.0.0.1"
+DB_HOST="10.0.0.135"
 DATABASE="sensors"
 DB_PORT=3306        # set to 33306 to tunnel
 
@@ -311,4 +311,5 @@ if __name__ == '__main__':
     else:
         log.setLevel(logging.DEBUG)
 
+    print("Starting server on port: {}".format(args.port))
     app.run_server(debug=(args.debug>0),port=args.port)
