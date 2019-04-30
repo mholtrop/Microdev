@@ -34,7 +34,7 @@ from DevLib import BBSpiDev
 class MCP4822(object):
 
     #
-    # Embedded class to modify list behavior. This allows the main class
+    # Embedded classes to modify list behavior. This allows the main class
     # to detect if the user sets or gets the DAC values.
     #
     class my_values(list):
