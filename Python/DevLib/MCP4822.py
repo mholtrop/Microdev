@@ -116,7 +116,7 @@ class MCP4822(object):
             self._MOSI = None
 
         if self._MOSI:  # Bing Bang mode
-            self._dev = BBSpiDev.BBSpiDev(CS=self._CS_bar,CLK=self._CLK,MOSI=self._MOSI,MISO=None)
+            self._dev = BBSpiDev(CS=self._CS_bar,CLK=self._CLK,MOSI=self._MOSI,MISO=None)
             self._MaxWriteSpeed=10000000
         else:
             self._dev = spidev.SpiDev(0,self._CS_bar)     # Start a SpiDev device
