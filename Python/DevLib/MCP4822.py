@@ -202,15 +202,15 @@ def main(argv):
         clk_pin=1000000
         mosi_pin=0
         channel =0
-    elif len(argv) < 5:
-        print("Please supply: cs_bar_pin clk_pin mosi_pin miso_pin channel")
+    elif len(argv) < 3:
+        print("Please supply: cs_bar_pin clk_pin mosi_pin")
         sys.exit(1)
 
     else:
         cs_bar  = int(argv[1])
         clk_pin = int(argv[2])
         mosi_pin= int(argv[3])
-        channel = int(argv[4])
+
 
     dac = MCP4822(cs_bar,clk_pin,mosi_pin)
     dac.gain=2  # allow for volts up to 4V.
