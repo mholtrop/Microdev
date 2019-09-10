@@ -98,7 +98,7 @@ class ADS1115(object):
     }
     ADS1115_CONFIG_DATARATE_REV = {v: k for k, v in ADS1115_CONFIG_DATARATE.items()}
 
-    class my_values:
+    class my_values(object):
         """Class for getting the value of the chip, which mimics a list."""
         def __init__(self,getter,MAX):
             self._getter = getter
