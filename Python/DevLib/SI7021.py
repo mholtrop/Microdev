@@ -33,8 +33,12 @@
 #
 from __future__ import print_function
 
-import smbus2 as smb
-import time
+try:
+    import smbus2 as smb
+    import time
+except:
+    print("Please install smbus2 with 'pip install smbus2' ")
+    raise ModuleNotFoundError("smbus2 not found.")
 
 class SI7021:
 

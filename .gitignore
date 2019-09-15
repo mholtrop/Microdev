@@ -8,12 +8,20 @@
 # Ignore the dependency directories.
 depdir
 
-# Copied include files
-AVR/include/*.h
+# Ignore any and all tmp directories and files.
+tmp
+*.tmp
 
-# XCode stuff
+# Copied include files
+# AVR/include/*.h
+
+# XCode user data
+AVR/AVR2.xcworkspace/xcuserdata
 *.xcodeproj
 build
+
+# Attics
+*/Attic
 
 # Precompiled Headers
 *.gch
