@@ -68,7 +68,8 @@ div_value_labels_contents.append(".") # This dot at the end makes sure it displa
 
 app = dash.Dash(__name__)
 app.layout = html.Div([
-        html.Div([
+    html.Div(["<h>Temperature Server</h>"]),
+    html.Div([
             html.Div(
                 dcc.Slider(
                     id="Buff_slider",min=1./60.,max=1000.,step=1.,
