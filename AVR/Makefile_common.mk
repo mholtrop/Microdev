@@ -15,7 +15,7 @@
 # Specs come from SPEC file (Makefile_spec.mk), which is also used for compiling the libraries.
 # You include the SPEC file at the TOP of your Makefile.
 #
-AVR_HOME ?= ${HOME}/code/AVR
+AVR_HOME ?=  /Users/maurik/Documents/Electronics/Microdev/AVR # ${HOME}/code/AVR
 
 DEPDIR = depdir
 
@@ -27,7 +27,7 @@ INC= -I${AVR_HOME}/include -I${AVR_HOME}/include/variants/$(BOARD_TYPE) $(EXTRA_
 # Fairly comprehensive LIBS definition.
 #
 ifndef LIBS
-#$(warning LIBS was not set)
+$(warning Warning - LIBS was not set, not fatal, I set something for you.)
 LIBS = -L${AVR_HOME}/lib/$(SYSTEM_TYPE) -larduinoutil -larduino  $(EXTRA_LIBS) -lm -lc
 endif
 

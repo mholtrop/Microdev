@@ -12,7 +12,7 @@
 #
 # Specs come from a SPEC file, also used for library.
 #
-include ../Makefile_specs.mk
+include Makefile_specs.mk
 
 DEPDIR = depdir
 

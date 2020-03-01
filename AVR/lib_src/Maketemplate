@@ -8,7 +8,7 @@
 #
 ################################################
 
-AVR_HOME ?= ${HOME}/code/AVR
+AVR_HOME ?= ${HOME}/Documents/Electronics/Microdev/AVR
 
 include $(AVR_HOME)/Makefile_specs.mk
 
@@ -30,6 +30,7 @@ OBJDIR = obj
 # Program settings
 CC = avr-gcc
 CXX = avr-g++
+
 OBJCOPY = avr-objcopy
 OBJDUMP = avr-objdump
 AR  = avr-ar
@@ -40,7 +41,7 @@ REMOVE = rm -f
 MV = mv -f
 
 #
-# Details of the compiler process. 
+# Details of the compiler process.
 # Probably no need to change any of this.
 #
 
@@ -80,7 +81,7 @@ ASMFLAGS +=  -mmcu=$(MCU)        \
 #		$(<:.S=.lst) $(<.s=.lst))
 
 # linker
-LDFLAGS=-Wl,-Map,$(TARGET).map -mmcu=$(MCU) 
+LDFLAGS=-Wl,-Map,$(TARGET).map -mmcu=$(MCU)
 
 # Define all object files.
 OBJ = $(addprefix $(OBJDIR)/,$(SRC:.c=.o) $(CXXSRC:.cpp=.o) $(ASRC:.S=.o) )
@@ -94,7 +95,7 @@ CFLAGS   += -I. -DF_CPU=$(F_CPU) -DMCU=$(MCU)  $(INC)
 CXXFLAGS += -I. -DF_CPU=$(F_CPU) -DMCU=$(MCU)  $(INC)
 ASMFLAGS += -I.  -DF_CPU=$(F_CPU) -DMCU=$(MCU) $(INC)
 
-all: includes  $(LIB) 
+all: includes  $(LIB)
 
 help:
 	@echo '############################################################'
@@ -107,7 +108,8 @@ help:
 	@echo ''
 	@echo '############################################################'
 	@echo ''
-	@echo 'AVR_HOME      :'$(AVR_HOME)
+	@echo 'AVR_HOME       :'$(AVR_HOME)
+	@echo 'LIB_INSTALL_DIR:'$(LIB_INSTALL_DIR)
 	@echo '----------------------------------------------'
 	@echo 'Change these in ../Makefile_specs.mk file:'
 	@echo 'SYSTEM        :'$(SYSTEM_TYPE)
@@ -129,7 +131,7 @@ help:
 
 
 
-$(LIB): $(OBJ) Makefile 
+$(LIB): $(OBJ) Makefile
 #	@for i in $(OBJ); do echo $(AR) rcs $(LIB) $$i; $(AR) rcs $(LIB) $$i; done
 	$(AR) rcs $(LIB) $(OBJ)
 
@@ -138,7 +140,7 @@ install: $(LIB_INSTALL_DIR)/$(LIB) $(HEADERS_INSTALL)
 includes: $(HEADERS_INSTALL)
 
 $(LIB_INSTALL_DIR)/$(LIB): $(LIB)
-	@echo 'Installing '$(notdir $(shell pwd))'  in '$(LIB)
+	@echo 'Installing '$(notdir $(shell pwd))'  in '$(LIB_INSTALL_DIR)
 	@test -d $(LIB_INSTALL_DIR) || mkdir -p $(LIB_INSTALL_DIR)
 	@cp $(LIB) $(LIB_INSTALL_DIR)
 
@@ -155,10 +157,10 @@ $(OBJDIR)/%.o: %.cpp
 $(OBJDIR)/%.o: %.c
 	@test -d $(dir $@) || mkdir -p $(dir $@)
 	@test -d $(DEPDIR)/$(dir $*) || mkdir -p $(DEPDIR)/$(dir $*)
-	$(CC) -c $(CFLAGS) $< -o $@ 
+	$(CC) -c $(CFLAGS) $< -o $@
 
-#.c.o:  
-#	$(CC) -c $(CFLAGS) $< -o $@ 
+#.c.o:
+#	$(CC) -c $(CFLAGS) $< -o $@
 
 
 # Assemble: create object files from assembler source files.
@@ -176,7 +178,7 @@ $(OBJDIR)/%.o: %.S
 
 #
 # Don't need the above, this will do so automatically at the time of compile.
-# It means the "include" statements below need a - in front. 
+# It means the "include" statements below need a - in front.
 
 CFLAGS +=  -Wp,-MD,$(DEPDIR)/$*.d
 CXXFLAGS+=  -Wp,-MD,$(DEPDIR)/$*.d
@@ -192,7 +194,7 @@ distclean: clean
 
 #
 # Include the dependency information. The - makes sure that it won't fail the make process if the
-# .d files do not exist already. 
+# .d files do not exist already.
 # The .d files are made during the compile stage with the "-MD" flag.
 # We use -Wp,-MD,$(DEPDIR)/$*.d to place the *.d files in the DEPDIR.
 # Note that this means you loose depencency information if you wipe the .d files.
