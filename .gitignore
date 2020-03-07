@@ -20,6 +20,12 @@ AVR/AVR2.xcworkspace/xcuserdata
 *.xcodeproj
 build
 
+# AVR/include is installed.
+AVR/include
+
+# XCode DerivedData directories
+DerivedData
+
 # Attics
 */Attic
 
