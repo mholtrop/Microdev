@@ -28,7 +28,7 @@ import time
 
 try:
     import smbus
-except:
+except ImportError:
     print("No smbus found. Please install smbus")
 
 class MLX90614(object):

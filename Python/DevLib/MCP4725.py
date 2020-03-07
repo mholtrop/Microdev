@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# This driver sets the output on a MCP4725 chip, and also reads back the current setting.
+# This driver sets the output on a MCP4725 (12-bit DAQ) chip, and also reads back the current setting.
 #
 # To see if the MCP4725 is available on the bus execute:
 #  sudo i2cdetect -y 1
@@ -33,7 +33,7 @@ import smbus
 
 class MCP4725(object):
     """
-    MCP4725 12-bit digital to analog converter.
+    MCP4725 12-bit DAC (digital to analog converter).
     Parameters: bus (default=1), addr (default = 0x62)
     """
 
