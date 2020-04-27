@@ -134,9 +134,9 @@ class MCP320x:
         #            - bit6   : D0 low bit of channel select.
         #            - bit5-0 : Don't care.
         if self._SingleEnded:
-            self._control0=[0b00000100,0b00100000,0]  # Pre-compute part of the control word.
-        else:
             self._control0=[0b00000110,0b00100000,0]  # Pre-compute part of the control word.
+        else:
+            self._control0=[0b00000100,0b00100000,0]  # Pre-compute part of the control word.
 
         if self._MOSI > 0:  # Bing Bang mode
             assert self._MISO !=0 and self._CLK < 32
