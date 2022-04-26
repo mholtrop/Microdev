@@ -79,7 +79,7 @@ class SN74HC595:
         """
         for i in range(self.Serial_N):        # Run the loop shift_n times.
             bit = bits_out >> (self.Serial_N - i - 1)
-            GPIO.output(self.Serial_Out)      # First bit is already present on Q after load.
+            GPIO.output(self.Serial_Out, bit)      # First bit is already present on Q after load.
             GPIO.output(self.Serial_CLK, GPIO.HIGH)  # Clock High loads next bit into Q of chip.
             GPIO.output(self.Serial_CLK, GPIO.LOW)   # Clock back to low, rest state.
 
