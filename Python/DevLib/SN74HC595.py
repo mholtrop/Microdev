@@ -67,6 +67,12 @@ class SN74HC595:
         if self.Serial_Clear is not None:
             GPIO.cleanup(self.Serial_Clear)
 
+    def clear(self):
+        """Clear the register."""
+        GPIO.output(self.Serial_Clear, GPIO.LOW)
+        GPIO.output(self.Serial_Clear, GPIO.HIGH)
+        self.set_output()
+
     def set_output(self):
         """Load the parallel data into the shifter by toggling Serial_Load low."""
         GPIO.output(self.Serial_Load, GPIO.HIGH)
@@ -78,7 +84,7 @@ class SN74HC595:
         to Least Significant Bit (LSB) last.
         """
         for i in range(self.Serial_N):        # Run the loop shift_n times.
-            bit = bits_out >> (self.Serial_N - i - 1)
+            bit = (bits_out >> (self.Serial_N - i - 1)) & 1
             GPIO.output(self.Serial_Out, bit)      # First bit is already present on Q after load.
             GPIO.output(self.Serial_CLK, GPIO.HIGH)  # Clock High loads next bit into Q of chip.
             GPIO.output(self.Serial_CLK, GPIO.LOW)   # Clock back to low, rest state.
