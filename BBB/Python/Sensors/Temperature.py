@@ -16,6 +16,16 @@ DB_PORT = 3306        # set to 33306 to tunnel
 ZMQ_PORT = 5555
 ZMQ_TIMEOUT = 1000
 
+try:
+    import paho.mqtt.client as mqtt
+    MQTT_Broker = "10.0.0.131"  # Pimaker1
+    MQTT_Port = 1883
+
+except ImportError as e:
+   print("Could not start MQTT")
+   MQTT_Broker = None
+   MQTT_Port = 0
+
 SLEEP_TIME = 10       # Sleep time in seconds. This equals (almost) the 0MQ response time.
 READ_INTERVAL = 10*60  # once per 10 minutes.
 DEBUG = 0
