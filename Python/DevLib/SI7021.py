@@ -70,12 +70,11 @@ class SI7021:
                     remnant = (remnant << 1) ^ 0x31
                 else:
                     remnant = (remnant << 1)
-        return(remnant & 0xFF)
-
+        return remnant & 0xFF
 
     def Read_Humidity(self):
-        '''Read the humidity and return as a float %'''
-        read = smb.i2c_msg.read(0x40,3) # Prepare the read of 3 words.
+        """Read the humidity and return as a float %"""
+        read = smb.i2c_msg.read(self._ADDRESS,3)  # Prepare the read of 3 words.
         self._dev.write_byte(self._ADDRESS,self._READ_HUM)
         time.sleep(0.2)                 # Wait for conversion
         try:
@@ -86,30 +85,29 @@ class SI7021:
         humidity = 125.*raw_val/65536. - 6.
         if self._crc([ord(read.buf[0]),ord(read.buf[1])]) !=ord(read.buf[2]) :
             print("The CRC is not correct.")
-        return(humidity)
+        return humidity
 
-    def Read_Temperature(self,reg=0xF3):
-        '''Read the temperature and return as float degrees C.
-        optional argument: reg = register to read from.'''
-        read = smb.i2c_msg.read(0x40,3) # Prepare the read of 3 words.
-        self._dev.write_byte(self._ADDRESS,self._READ_TEMP)
+    def Read_Temperature(self, reg=0xF3):
+        """Read the temperature and return as float degrees C.
+        optional argument: reg = register to read from."""
+        read = smb.i2c_msg.read(0x40, 3)  # Prepare the read of 3 words.
+        self._dev.write_byte(self._ADDRESS, self._READ_TEMP)
         time.sleep(0.2)                 # Wait for conversion
         try:
             self._dev.i2c_rdwr(read)
         except Exception as e:          # Probably didn't wait long enough
             print(e)
-        raw_val = (ord(read.buf[0])<<8 ) + ord(read.buf[1])
+        raw_val = (ord(read.buf[0]) << 8) + ord(read.buf[1])
         temperature = 175.72*raw_val/65536. - 46.85
-        if self._crc([ord(read.buf[0]),ord(read.buf[1])])!=ord(read.buf[2]):
+        if self._crc([ord(read.buf[0]), ord(read.buf[1])]) != ord(read.buf[2]):
             print("The CRC is not correct.")
-        return(temperature)
+        return temperature
 
     def Read_Humi_Temp(self):
         '''Read the temperature and humidity, return as list [humi,temp]'''
         humi = self.Read_Humidity()
         temp = self.Read_Temperature(self._READ_HUM_TEMP)
-        return([humi,temp])
-
+        return [humi, temp]
 
     def Set_Resolution(self, res):
         """
@@ -122,8 +120,8 @@ class SI7021:
         """
         # read register and only update resolution bits
         value = self._dev.read_byte_data(self._ADDRESS,self._READ_USER_REG)
-        value_new = (value & 0x7E) | (res & 1) | ((res & 2)<<6)
-        self._dev.write_byte_data(self._ADDRESS,self._WRITE_USER_REG,value_new)
+        value_new = (value & 0x7E) | (res & 1) | ((res & 2) << 6)
+        self._dev.write_byte_data(self._ADDRESS, self._WRITE_USER_REG, value_new)
 
     def Get_Resolution(self):
         """
@@ -135,7 +133,7 @@ class SI7021:
         3 : Humidity 11 bits,  Temperature 11 bits
         """
         value = self._dev.read_byte_data(self._ADDRESS,self._READ_USER_REG)
-        stat = ((value[0]&128)>>6) | (value[0]&1)
+        stat = ((value[0]&128) >> 6) | (value[0] & 1)
         return stat
 
     def Set_Heater_Level(self, level):
@@ -155,9 +153,9 @@ class SI7021:
         15: 94.20 mA
         """
         # read register and only update heater bits
-        val=self._dev.read_byte_data(self._ADDRESS,0x11)
+        val=self._dev.read_byte_data(self._ADDRESS, 0x11)
         v = (val & 0xF0) | (level & 0x0F)
-        self._dev.write_byte_data(self._ADDRESS,0x51, v)
+        self._dev.write_byte_data(self._ADDRESS, 0x51, v)
 
     def Get_Heater_Level(self):
         """
@@ -174,8 +172,8 @@ class SI7021:
         ....
         15: 94.20 mA
         """
-        level = self._dev.read_byte_data(self._ADDRESS,0x11) # level
-        return level&0x0F
+        level = self._dev.read_byte_data(self._ADDRESS, 0x11)  # level
+        return level & 0x0F
 
     def Heater_on(self):
         """
@@ -194,7 +192,7 @@ class SI7021:
         # read register and only update heater bit
         val=self._dev.read_byte_data(self._ADDRESS, 0xE7)
         v = (val & 0xFB)
-        self._dev.write_byte_data(self._ADDRESS,0xE6, v)
+        self._dev.write_byte_data(self._ADDRESS, 0xE6, v)
 
     def Firmware_Revision(self):
         """
@@ -203,27 +201,27 @@ class SI7021:
         A value of 0xFF means revision 1.0, a value of 0x20 means
         revision 2.0.
         """
-        write= smb.i2c_msg.write(0x40,[0x84, 0xB8])
-        read = smb.i2c_msg.read(0x40,1)
-        self._dev.i2c_rdwr(write,read) # id1
+        write= smb.i2c_msg.write(self._ADDRESS, [0x84, 0xB8])
+        read = smb.i2c_msg.read(self._ADDRESS, 1)
+        self._dev.i2c_rdwr(write, read)  # id1
         if ord(read.buf[0]) == 0xFF:
-            return("V 1.0")
+            return "V 1.0"
         elif ord(read.buf[0]) == 0x20:
-            return("V 2.0")
+            return "V 2.0"
         else:
-            return("V ???")
+            return "V ???"
 
     def Electronic_id1(self):
         """
         Returns the first four bytes of the electronic Id.
         If the CRC is incorrect 0 is returned.
         """
-        write= smb.i2c_msg.write(0x40,[0xFA, 0x0F])
-        read = smb.i2c_msg.read(0x40,8)
-        self._dev.i2c_rdwr(write,read) # id1
-        id1 = [ ord(read.buf[i]) for i in range(8)]
+        write = smb.i2c_msg.write(self._ADDRESS, [0xFA, 0x0F])
+        read = smb.i2c_msg.read(self._ADDRESS, 8)
+        self._dev.i2c_rdwr(write, read)  # id1
+        id1 = [ord(read.buf[i]) for i in range(8)]
         if self._crc([id1[0], id1[2], id1[4], id1[6]]) == id1[7]:
-            return (id1[0]<<24)|(id1[2]<<16)|(id1[4]<<8)|id1[6]
+            return (id1[0] << 24) | (id1[2] << 16) | (id1[4] << 8) | id1[6]
         else:
             return 0
 
@@ -232,36 +230,37 @@ class SI7021:
         Returns the second four bytes of the electronic Id.
         If the CRC is incorrect 0 is returned.
         """
-        write= smb.i2c_msg.write(0x40,[0xFC, 0xC9])
-        read = smb.i2c_msg.read(0x40,8)
-        self._dev.i2c_rdwr(write,read) # id2
+        write= smb.i2c_msg.write(self._ADDRESS, [0xFC, 0xC9])
+        read = smb.i2c_msg.read(self._ADDRESS, 8)
+        self._dev.i2c_rdwr(write, read)  # id2
         id2 = [ ord(read.buf[i]) for i in range(8)]
         if self._crc([id2[0], id2[1], id2[3], id2[4]]) == id2[5]:
-            return (id2[0]<<24)|(id2[1]<<16)|(id2[3]<<8)|id2[4]
+            return (id2[0] << 24) | (id2[1] << 16) | (id2[3] << 8) | id2[4]
         else:
             return 0
 
     def Part_number(self):
-        '''Returns which part number is connected. Either
-        Si7013, Si7020 or Si7021 '''
+        """Returns which part number is connected. Either
+        Si7013, Si7020 or Si7021 """
         id2 = self.Electronic_id2()
-        id2 = id2>>24
+        id2 = id2 >> 24
         if id2 == 13:
-            return('Si7013')
+            return 'Si7013'
         elif id2 == 20:
-            return('Si7020')
+            return 'Si7020'
         elif id2 == 21:
-            return('Si7021')
+            return 'Si7021'
         else:
-            return('Engineering sample {}'.format(id2))
+            return 'Engineering sample {}'.format(id2)
+
 
 def main():
-    '''Main code for testing.'''
+    """Main code for testing."""
 
     SI = SI7021()
-    [humi,temp] = SI.Read_Humi_Temp()
-    print(" {:^7}    {:^7}".format("Temp [C]","Humidity [%]"))
-    print(" {:>7.3f}    {:>7.2f}".format(temp,humi))
+    [humi, temp] = SI.Read_Humi_Temp()
+    print(" {:^7}    {:^7}".format("Temp [C]", "Humidity [%]"))
+    print(" {:>7.3f}    {:>7.2f}".format(temp, humi))
 
     firmw = SI.Firmware_Revision()
     print("Firmware rev {}".format(firmw))
