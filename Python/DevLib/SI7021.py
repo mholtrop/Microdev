@@ -40,19 +40,22 @@ except:
     print("Please install smbus2 with 'pip install smbus2' ")
     raise ModuleNotFoundError("smbus2 not found.")
 
-class SI7021:
 
+class SI7021:
+    """Class to interface with the SI7021 sensor over the I2C bus with Python."""
     # Table of useful address locations.
-    _ADDRESS=0x40
+    _ADDRESS = 0x40
     _RESET = 0xFE
-    _READ_HUM= 0xF5          # Read humidity "no hold master mode"
+    _READ_HUM = 0xF5          # Read humidity "no hold master mode"
     _READ_HUM_TEMP = 0xE0    # Read the last temp (from the hum measurement)
-    _READ_TEMP=0xF3          # Read the temp "no hold master mode"
-    _WRITE_USER_REG=0xE6
-    _READ_USER_REG=0xE7
+    _READ_TEMP = 0xF3          # Read the temp "no hold master mode"
+    _READ_HEATER_REG = 0x11
+    _WRITE_HEATER_REG = 0x51
+    _WRITE_USER_REG = 0xE6
+    _READ_USER_REG = 0xE7
 
     def __init__(self,bus=1):
-        '''Initialize the class. The only argument the bus=1 for RPi, or 0,1,2 for BeagleBone.'''
+        """Initialize the class. The only argument the bus=1 for RPi, or 0,1,2 for BeagleBone."""
 
         self._dev = smb.SMBus(bus)
         self._dev.write_byte(self._ADDRESS,self._RESET)
@@ -74,16 +77,16 @@ class SI7021:
 
     def Read_Humidity(self):
         """Read the humidity and return as a float %"""
-        read = smb.i2c_msg.read(self._ADDRESS,3)  # Prepare the read of 3 words.
-        self._dev.write_byte(self._ADDRESS,self._READ_HUM)
+        read = smb.i2c_msg.read(self._ADDRESS, 3)  # Prepare the read of 3 words.
+        self._dev.write_byte(self._ADDRESS, self._READ_HUM)
         time.sleep(0.2)                 # Wait for conversion
         try:
             self._dev.i2c_rdwr(read)
         except Exception as e:          # Probably didn't wait long enough
             print(e)
-        raw_val = (ord(read.buf[0])<<8 ) + ord(read.buf[1])
+        raw_val = (ord(read.buf[0]) << 8) + ord(read.buf[1])
         humidity = 125.*raw_val/65536. - 6.
-        if self._crc([ord(read.buf[0]),ord(read.buf[1])]) !=ord(read.buf[2]) :
+        if self._crc([ord(read.buf[0]), ord(read.buf[1])]) != ord(read.buf[2]):
             print("The CRC is not correct.")
         return humidity
 
@@ -104,7 +107,7 @@ class SI7021:
         return temperature
 
     def Read_Humi_Temp(self):
-        '''Read the temperature and humidity, return as list [humi,temp]'''
+        """Read the temperature and humidity, return as list [humi,temp]"""
         humi = self.Read_Humidity()
         temp = self.Read_Temperature(self._READ_HUM_TEMP)
         return [humi, temp]
@@ -133,7 +136,7 @@ class SI7021:
         3 : Humidity 11 bits,  Temperature 11 bits
         """
         value = self._dev.read_byte_data(self._ADDRESS,self._READ_USER_REG)
-        stat = ((value[0]&128) >> 6) | (value[0] & 1)
+        stat = ((value[0] & 128) >> 6) | (value[0] & 1)
         return stat
 
     def Set_Heater_Level(self, level):
@@ -153,9 +156,9 @@ class SI7021:
         15: 94.20 mA
         """
         # read register and only update heater bits
-        val=self._dev.read_byte_data(self._ADDRESS, 0x11)
+        val = self._dev.read_byte_data(self._ADDRESS, self._READ_HEATER_REG)
         v = (val & 0xF0) | (level & 0x0F)
-        self._dev.write_byte_data(self._ADDRESS, 0x51, v)
+        self._dev.write_byte_data(self._ADDRESS, self._WRITE_HEATER_REG, v)
 
     def Get_Heater_Level(self):
         """
@@ -172,7 +175,7 @@ class SI7021:
         ....
         15: 94.20 mA
         """
-        level = self._dev.read_byte_data(self._ADDRESS, 0x11)  # level
+        level = self._dev.read_byte_data(self._ADDRESS, self._READ_HEATER_REG)  # level
         return level & 0x0F
 
     def Heater_on(self):
@@ -180,9 +183,9 @@ class SI7021:
         Switches the heater on.
         """
         # read register and only update heater bit
-        val=self._dev.read_byte_data(self._ADDRESS, 0xE7)
+        val = self._dev.read_byte_data(self._ADDRESS, self._READ_USER_REG)
         v = (val & 0xFB) | 4
-        self._dev.write_byte_data(self._ADDRESS,0xE6, v)
+        self._dev.write_byte_data(self._ADDRESS, self._WRITE_USER_REG, v)
 
     def Heater_off(self):
         """
@@ -190,9 +193,9 @@ class SI7021:
         """
         # read register and only update heater bit
         # read register and only update heater bit
-        val=self._dev.read_byte_data(self._ADDRESS, 0xE7)
+        val=self._dev.read_byte_data(self._ADDRESS, self._READ_USER_REG)
         v = (val & 0xFB)
-        self._dev.write_byte_data(self._ADDRESS, 0xE6, v)
+        self._dev.write_byte_data(self._ADDRESS, self._WRITE_USER_REG, v)
 
     def Firmware_Revision(self):
         """
@@ -201,7 +204,7 @@ class SI7021:
         A value of 0xFF means revision 1.0, a value of 0x20 means
         revision 2.0.
         """
-        write= smb.i2c_msg.write(self._ADDRESS, [0x84, 0xB8])
+        write = smb.i2c_msg.write(self._ADDRESS, [0x84, 0xB8])
         read = smb.i2c_msg.read(self._ADDRESS, 1)
         self._dev.i2c_rdwr(write, read)  # id1
         if ord(read.buf[0]) == 0xFF:
